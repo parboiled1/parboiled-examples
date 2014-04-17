@@ -1,6 +1,7 @@
 ## How to build
 
-**You must have a JDK version 6 for this package to work**.
+**You must have a JDK version 6 or 7 for this package to work**. Make sure that
+you use the same version to build all packages (including this one).
 
 You will need to fork both:
 
