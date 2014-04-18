@@ -81,9 +81,9 @@ task pom << {
  */
 
 project.ext {
-    gitrwscm = sprintf("git@github.com:fge/%s", name);
-    gitroscm = sprintf("https://github.com/fge/%s.git", name);
-    projectURL = sprintf("https://github.com/fge/%s", name);
+    gitrwscm = sprintf("git@github.com:parboiled1/%s", name);
+    gitroscm = sprintf("https://github.com/parboiled1/%s.git", name);
+    projectURL = sprintf("https://github.com/parboiled1/%s", name);
     sonatypeStaging = "https://oss.sonatype.org/service/local/staging/deploy/maven2/";
     sonatypeSnapshots = "https://oss.sonatype.org/content/repositories/snapshots/";
 };
@@ -94,7 +94,7 @@ task checkSigningRequirements << {
     requiredProperties.each {
         if (project.properties[it] == null) {
             noDice = true;
-            System.err.printf("property \"%s\" is not defined!")
+            System.err.printf("property \"%s\" is not defined!", it);
         }
     }
     if (noDice)
@@ -148,22 +148,9 @@ uploadArchives {
 
         licenses {
             license {
-                name "Lesser General Public License, version 3 or greater";
-                url "http://www.gnu.org/licenses/lgpl.html";
-                distribution "repo";
-            };
-            license {
                 name "Apache Software License, version 2.0";
                 url "http://www.apache.org/licenses/LICENSE-2.0";
                 distribution "repo";
-            }
-        }
-
-        developers {
-            developer {
-                id "fge";
-                name "Francis Galiegue";
-                email "fgaliegue@gmail.com";
             }
         }
     }
