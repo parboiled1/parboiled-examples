@@ -22,7 +22,7 @@ repositories {
 
 dependencies {
     compile(group: "com.github.parboiled1", name: "parboiled-java",
-        version: "1.1.7-beta.1");
+        version: "1.1.7-beta.2");
     testCompile(group: "org.testng", name: "testng", version: "6.8.7") {
         exclude(group: "junit", module: "junit");
         exclude(group: "org.beanshell", module: "bsh");
@@ -151,6 +151,14 @@ uploadArchives {
                 name "Apache Software License, version 2.0";
                 url "http://www.apache.org/licenses/LICENSE-2.0";
                 distribution "repo";
+            }
+        }
+
+        developers {
+            developer {
+                id "fge";
+                name "Francis Galiegue";
+                email "fgaliegue@gmail.com";
             }
         }
     }
