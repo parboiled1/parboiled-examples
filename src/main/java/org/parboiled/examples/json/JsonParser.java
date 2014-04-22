@@ -78,7 +78,7 @@ public class JsonParser
 
     Rule Int()
     {
-        return Sequence(TestNot('0'), Digits());
+        return FirstOf(Sequence(TestNot('0'), Digits()), '0');
     }
 
     Rule Frac()
