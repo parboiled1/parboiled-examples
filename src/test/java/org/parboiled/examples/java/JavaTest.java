@@ -54,8 +54,10 @@ public class JavaTest {
                 "        Any           : 1\n" +
                 "        CharIgnoreCase: 1\n" +
                 "        Char          : 83\n" +
+                "        UnicodeChar   : 0\n" +
                 "        Custom        : 2\n" +
                 "        CharRange     : 7\n" +
+                "        UnicodeRange  : 0\n" +
                 "        AnyOf         : 16\n" +
                 "        Empty         : 0\n" +
                 "        FirstOf       : 65\n" +

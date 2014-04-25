@@ -22,7 +22,7 @@ import org.parboiled.support.ParsingResult;
 import org.testng.annotations.Test;
 import org.parboiled.parserunners.TracingParseRunner;
 
-import static org.parboiled.common.Predicates.*;
+import static com.google.common.base.Predicates.*;
 import static org.parboiled.errors.ErrorUtils.printParseErrors;
 import static org.parboiled.support.Filters.rules;
 import static org.parboiled.support.Filters.rulesBelow;

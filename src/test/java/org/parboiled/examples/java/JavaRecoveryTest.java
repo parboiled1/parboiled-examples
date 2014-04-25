@@ -16,10 +16,10 @@
 
 package org.parboiled.examples.java;
 
+import com.google.common.base.Predicates;
 import org.parboiled.Node;
 import org.parboiled.Parboiled;
 import org.parboiled.common.FileUtils;
-import org.parboiled.common.Predicates;
 import org.parboiled.examples.TestNgParboiledTest;
 import org.parboiled.support.Filters;
 import org.testng.annotations.Test;
@@ -56,7 +56,8 @@ public class JavaRecoveryTest extends TestNgParboiledTest<Object> {
         if (!s[0].startsWith("//")) {
             testWithRecovery(parser.CompilationUnit(), s[0])
                     .hasErrors(s[1])
-                    .hasParseTree(Filters.SKIP_EMPTY_OPTS_AND_ZOMS, Predicates.<Node<Object>>alwaysTrue(), s[2]);
+                    .hasParseTree(Filters.SKIP_EMPTY_OPTS_AND_ZOMS, Predicates
+                        .<Node<Object>>alwaysTrue(), s[2]);
         }
     }
 
