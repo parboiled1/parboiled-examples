@@ -22,7 +22,7 @@ repositories {
 
 dependencies {
     compile(group: "com.github.parboiled1", name: "grappa",
-        version: "1.0.0-beta.2-SNAPSHOT");
+        version: "1.0.0-beta.2");
     testCompile(group: "org.testng", name: "testng", version: "6.8.7") {
         exclude(group: "junit", module: "junit");
         exclude(group: "org.beanshell", module: "bsh");
