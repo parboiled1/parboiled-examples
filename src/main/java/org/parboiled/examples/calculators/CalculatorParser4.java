@@ -29,7 +29,7 @@ import org.parboiled.support.Var;
 public class CalculatorParser4 extends CalculatorParser<CalcNode> {
 
     @Override
-    public Rule InputLine() {
+    public Rule inputLine() {
         return Sequence(Expression(), EOI);
     }
 

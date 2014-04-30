@@ -28,7 +28,7 @@ import org.parboiled.annotations.SuppressSubnodes;
 public class CalculatorParser1 extends CalculatorParser<Integer> {
 
     @Override
-    public Rule InputLine() {
+    public Rule inputLine() {
         return Sequence(Expression(), EOI);
     }
 

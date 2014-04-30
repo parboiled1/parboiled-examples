@@ -26,7 +26,7 @@ import org.parboiled.annotations.BuildParseTree;
 public class CalculatorParser0 extends CalculatorParser<Integer> {
 
     @Override
-    public Rule InputLine() {
+    public Rule inputLine() {
         return Sequence(Expression(), EOI);
     }
 

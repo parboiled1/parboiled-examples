@@ -41,7 +41,7 @@ public class TracingParseRunnerTest {
         final Predicate<Tuple2<Context<?>, Boolean>> predicate = and(
             rules(parser.Number(), parser.Parens()),
             not(rulesBelow(parser.Digits())));
-        TracingParseRunner<Integer> runner = new TracingParseRunner<Integer>(parser.InputLine())
+        TracingParseRunner<Integer> runner = new TracingParseRunner<Integer>(parser.inputLine())
                 .withFilter(predicate)
                 .withLog(log);
         ParsingResult<Integer> result = runner.run("2*(4+5");
@@ -52,7 +52,7 @@ public class TracingParseRunnerTest {
                 "      ^\n");
 
         assertEquals(log.toString(), "Starting new parsing run\n" +
-                "InputLine/Expression/Term/Factor/Number/Digits, matched, cursor at 1:2 after \"2\"\n" +
+                "inputLine/Expression/Term/Factor/Number/Digits, matched, cursor at 1:2 after \"2\"\n" +
                 "..(4)../Number/Number_Action1, matched, cursor at 1:2 after \"2\"\n" +
                 "..(4)../Number, matched, cursor at 1:2 after \"2\"\n" +
                 "..(2)../Term/ZeroOrMore/FirstOf/Sequence/Factor/Number/Digits, failed, cursor at 1:3 after \"2*\"\n" +

@@ -16,11 +16,11 @@
 
 package org.parboiled.examples.calculators;
 
+import com.google.common.base.Strings;
 import org.parboiled.BaseParser;
 import org.parboiled.Parboiled;
-import org.parboiled.parserunners.RecoveringParseRunner;
 import org.parboiled.Rule;
-import org.parboiled.common.StringUtils;
+import org.parboiled.parserunners.RecoveringParseRunner;
 import org.parboiled.support.ParsingResult;
 import org.parboiled.support.ToStringFormatter;
 import org.parboiled.trees.GraphNode;
@@ -39,7 +39,7 @@ import static org.parboiled.trees.GraphUtils.printTree;
  */
 public abstract class CalculatorParser<V> extends BaseParser<V> {
 
-    public abstract Rule InputLine();
+    public abstract Rule inputLine();
 
     @SuppressWarnings({"unchecked"})
     public static <V, P extends CalculatorParser<V>> void main(Class<P> parserClass) {
@@ -48,9 +48,10 @@ public abstract class CalculatorParser<V> extends BaseParser<V> {
         while (true) {
             System.out.print("Enter a calculators expression (single RETURN to exit)!\n");
             String input = new Scanner(System.in).nextLine();
-            if (StringUtils.isEmpty(input)) break;
+            if (Strings.isNullOrEmpty(input))
+                break;
 
-            ParsingResult<?> result = new RecoveringParseRunner(parser.InputLine()).run(input);
+            ParsingResult<?> result = new RecoveringParseRunner(parser.inputLine()).run(input);
 
             if (result.hasErrors()) {
                 System.out.println("\nParse Errors:\n" + printParseErrors(result));

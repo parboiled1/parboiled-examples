@@ -31,7 +31,7 @@ import org.parboiled.trees.ImmutableBinaryTreeNode;
 public class CalculatorParser2 extends CalculatorParser<CalcNode> {
 
     @Override
-    public Rule InputLine() {
+    public Rule inputLine() {
         return Sequence(Expression(), EOI);
     }
 

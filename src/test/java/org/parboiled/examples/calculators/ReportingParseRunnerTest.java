@@ -17,11 +17,7 @@
 package org.parboiled.examples.calculators;
 
 import org.parboiled.Parboiled;
-import org.parboiled.Rule;
 import org.parboiled.examples.TestNgParboiledTest;
-import org.parboiled.support.ParsingResult;
-import org.parboiled.test.ParboiledTest;
-import org.parboiled.parserunners.ReportingParseRunner;
 import org.testng.annotations.Test;
 
 import static org.parboiled.errors.ErrorUtils.printParseErrors;
@@ -33,7 +29,7 @@ public class ReportingParseRunnerTest extends TestNgParboiledTest<Integer> {
 
     @Test
     public void testSimpleReporting() {
-        test("X1+2", "Invalid input 'X', expected InputLine (line 1, pos 1):\nX1+2\n^\n");
+        test("X1+2", "Invalid input 'X', expected inputLine (line 1, pos 1):\nX1+2\n^\n");
         test("1X+2", "Invalid input 'X', expected Digit, '*', '/', '+', '-' or EOI (line 1, pos 2):\n1X+2\n ^\n");
         test("1+X2", "Invalid input 'X', expected Term (line 1, pos 3):\n1+X2\n  ^\n");
         test("1+2X", "Invalid input 'X', expected Digit, '*', '/', '+', '-' or EOI (line 1, pos 4):\n1+2X\n   ^\n");
@@ -51,6 +47,6 @@ public class ReportingParseRunnerTest extends TestNgParboiledTest<Integer> {
     }
 
     private void test(String input, String expectedErrorMessage) {
-        test(parser.InputLine(), input).hasErrors(expectedErrorMessage);
+        test(parser.inputLine(), input).hasErrors(expectedErrorMessage);
     }
 }

@@ -31,10 +31,10 @@ public class CalculatorsTest extends TestNgParboiledTest<Object> {
     @Test
     public void testCalculator0() {
         CalculatorParser parser = Parboiled.createParser(CalculatorParser0.class);
-        test(parser.InputLine(), "1+5")
+        test(parser.inputLine(), "1+5")
                 .hasNoErrors()
                 .hasParseTree("" +
-                        "[InputLine] '1+5'\n" +
+                        "[inputLine] '1+5'\n" +
                         "  [Expression] '1+5'\n" +
                         "    [Term] '1'\n" +
                         "      [Factor] '1'\n" +
@@ -63,12 +63,12 @@ public class CalculatorsTest extends TestNgParboiledTest<Object> {
         CalculatorParser parser = Parboiled.createParser(CalculatorParser2.class);
         assertEquals(
                 printTree(
-                        (Matcher) parser.InputLine(),
+                        (Matcher) parser.inputLine(),
                         new ToStringFormatter<Matcher>(),
                         Predicates.<Matcher>alwaysTrue(),
                         Filters.preventLoops()
                 ), "" +
-                        "InputLine\n" +
+                        "inputLine\n" +
                         "  Expression\n" +
                         "    Term\n" +
                         "      Factor\n" +
@@ -136,7 +136,7 @@ public class CalculatorsTest extends TestNgParboiledTest<Object> {
     }
 
     private void test(CalculatorParser parser, String input, String value) {
-        String str = test(parser.InputLine(), input).hasNoErrors().result.parseTreeRoot.getValue().toString();
+        String str = test(parser.inputLine(), input).hasNoErrors().result.parseTreeRoot.getValue().toString();
         int ix = str.indexOf('|');
         if (ix >= 0) str = str.substring(ix + 2);
         assertEquals(str, value);

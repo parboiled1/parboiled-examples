@@ -50,7 +50,7 @@ public class CalculatorRecoveryTest extends TestNgParboiledTest<Integer> {
     private void runTest(CalculatorParser parser, String test) {
         String[] s = test.split("===\r?\n");
         if (!s[0].startsWith("//")) {
-            testWithRecovery(parser.InputLine(), s[0].replaceAll("\r?\n", ""))
+            testWithRecovery(parser.inputLine(), s[0].replaceAll("\r?\n", ""))
                     .hasErrors(s[1])
                     .hasParseTree(s.length > 2 ? s[2] : "");
         }

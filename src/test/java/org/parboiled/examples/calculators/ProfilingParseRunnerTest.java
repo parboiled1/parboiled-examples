@@ -19,7 +19,6 @@ package org.parboiled.examples.calculators;
 import org.parboiled.Parboiled;
 import org.parboiled.examples.TestNgParboiledTest;
 import org.parboiled.parserunners.ProfilingParseRunner;
-import org.parboiled.test.ParboiledTest;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -29,7 +28,7 @@ public class ProfilingParseRunnerTest extends TestNgParboiledTest<Integer> {
     //@Test
     public void testProfiling() {
         CalculatorParser1 parser = Parboiled.createParser(CalculatorParser1.class);
-        ProfilingParseRunner runner = new ProfilingParseRunner(parser.InputLine());
+        ProfilingParseRunner runner = new ProfilingParseRunner(parser.inputLine());
         assertFalse(runner.run("1+2*(3-4)").hasErrors());
         /*assertEquals(runner.getReport().printBasics(), "" +
                 "Runs                     :               1\n" +
@@ -60,7 +59,7 @@ public class ProfilingParseRunnerTest extends TestNgParboiledTest<Integer> {
                 "Expression_Action1: Action     |      0 ms |     1  /     0  |     1  /     0  |     0  /     0  |       12,000 ns | 100.00% |     0  /     0  |     0  /     0  |     0  /     0  |   0.00% /    NaN%\n" +
                 "'(': Char                      |      0 ms |     1  /     0  |     1  /     0  |     0  /     0  |        4,000 ns | 100.00% |     0  /     0  |     0  /     0  |     0  /     0  |   0.00% /    NaN%\n" +
                 "')': Char                      |      0 ms |     1  /     0  |     1  /     0  |     0  /     0  |        4,000 ns | 100.00% |     0  /     0  |     0  /     0  |     0  /     0  |   0.00% /    NaN%\n" +
-                "InputLine: Sequence            |      2 ms |     1  /    88  |     1  /    88  |     0  /     0  |    2,435,000 ns | 100.00% |     0  /     0  |     0  /     0  |     0  /     0  |   0.00% /   0.00%\n" +
+                "inputLine: Sequence            |      2 ms |     1  /    88  |     1  /    88  |     0  /     0  |    2,435,000 ns | 100.00% |     0  /     0  |     0  /     0  |     0  /     0  |   0.00% /   0.00%\n" +
                 "Expression_Action2: Action     |      0 ms |     1  /     0  |     1  /     0  |     0  /     0  |       25,000 ns | 100.00% |     0  /     0  |     0  /     0  |     0  /     0  |   0.00% /    NaN%\n" +
                 "Term_Action1: Action           |      0 ms |     1  /     0  |     1  /     0  |     0  /     0  |       13,000 ns | 100.00% |     0  /     0  |     0  /     0  |     0  /     0  |   0.00% /    NaN%\n" +
                 "EOI: Char                      |      0 ms |     1  /     0  |     1  /     0  |     0  /     0  |        4,000 ns | 100.00% |     0  /     0  |     0  /     0  |     0  /     0  |   0.00% /    NaN%\n" +
