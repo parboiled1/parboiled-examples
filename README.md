@@ -1,21 +1,18 @@
+## Examples migrated
+
+They now use [grappa](https://github.com/parboiled1/grappa).
+
 ## How to build
 
-**You must have a JDK version 6 or 7 for this package to work**. Make sure that
-you use the same version to build all packages (including this one).
+You will need to have a JDK (6 or higher) to build this package. Nothing else is needed.
 
-You will need to fork both:
-
-* [parboiled-core](https://github.com/parboiled1/parboiled-core);
-* [parboiled-java](https://github.com/parboiled1/parboiled-java).
-
-Build them in this order, using:
+Build with:
 
 ```
 # Unix
-./gradlew clean test install
+./gradlew clean test
 # Windows
-gradlew.bat clean test install
+gradlew.bat clean test
 ```
 
-Then you can build this package.
 
