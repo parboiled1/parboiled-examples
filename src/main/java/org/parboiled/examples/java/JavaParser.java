@@ -1,6 +1,6 @@
 //===========================================================================
 //
-//  Parsing Expression Grammar for Java 1.6 as a parboiled parser.
+//  Parsing expression Grammar for Java 1.6 as a parboiled parser.
 //  Based on Chapters 3 and 18 of Java Language Specification, Third Edition (JLS)
 //  at http://java.sun.com/docs/books/jls/third_edition/html/j3TOC.html.
 //
@@ -28,12 +28,12 @@
 //    2009-07-10 Unused rule THREADSAFE removed.
 //    2009-07-10 Copying and distribution conditions relaxed by the author.
 //    2010-01-28 Transcribed to parboiled
-//    2010-02-01 Fixed problem in rule "FormalParameterDecls"
+//    2010-02-01 Fixed problem in rule "formalParameterDecls"
 //    2010-03-29 Fixed problem in "annotation"
 //    2010-03-31 Fixed problem in unicode escapes, String literals and line comments
 //               (Thanks to Reinier Zwitserloot for the finds)
-//    2010-07-26 Fixed problem in LocalVariableDeclarationStatement (accept annotations),
-//               HexFloat (HexSignificant) and AnnotationTypeDeclaration (bug in the JLS!)
+//    2010-07-26 Fixed problem in localVariableDeclarationStatement (accept annotations),
+//               hexFloat (hexSignificant) and annotationTypeDeclaration (bug in the JLS!)
 //    2010-10-07 Added full support of Unicode Identifiers as set forth in the JLS
 //               (Thanks for Ville Peurala for the patch)
 //    2011-07-23 Transcribed all missing fixes from Romans Mouse grammar (http://www.romanredz.se/papers/Java.1.6.peg)
@@ -54,42 +54,26 @@ public class JavaParser extends BaseParser<Object> {
     //  Compilation Unit
     //-------------------------------------------------------------------------
 
-    public Rule CompilationUnit() {
-        return Sequence(
-                Spacing(),
-                Optional(PackageDeclaration()),
-                ZeroOrMore(ImportDeclaration()),
-                ZeroOrMore(TypeDeclaration()),
-                EOI
-        );
+    public Rule compilationUnit() {
+        return sequence(spacing(), optional(packageDeclaration()),
+            zeroOrMore(importDeclaration()), zeroOrMore(typeDeclaration()), EOI);
     }
 
-    Rule PackageDeclaration() {
-        return Sequence(ZeroOrMore(Annotation()), Sequence(PACKAGE, QualifiedIdentifier(), SEMI));
+    Rule packageDeclaration() {
+        return sequence(zeroOrMore(annotation()),
+            sequence(PACKAGE, qualifiedIdentifier(), SEMI));
     }
 
-    Rule ImportDeclaration() {
-        return Sequence(
-                IMPORT,
-                Optional(STATIC),
-                QualifiedIdentifier(),
-                Optional(DOT, STAR),
-                SEMI
-        );
+    Rule importDeclaration() {
+        return sequence(IMPORT, optional(STATIC), qualifiedIdentifier(),
+            optional(DOT, STAR), SEMI);
     }
 
-    Rule TypeDeclaration() {
-        return FirstOf(
-                Sequence(
-                        ZeroOrMore(Modifier()),
-                        FirstOf(
-                                ClassDeclaration(),
-                                EnumDeclaration(),
-                                InterfaceDeclaration(),
-                                AnnotationTypeDeclaration()
-                        )
-                ),
-                SEMI
+    Rule typeDeclaration() {
+        return firstOf(sequence(zeroOrMore(modifier()),
+                firstOf(classDeclaration(), enumDeclaration(),
+                    interfaceDeclaration(), annotationTypeDeclaration())
+            ), SEMI
         );
     }
 
@@ -97,316 +81,280 @@ public class JavaParser extends BaseParser<Object> {
     //  Class Declaration
     //-------------------------------------------------------------------------
 
-    Rule ClassDeclaration() {
-        return Sequence(
+    Rule classDeclaration() {
+        return sequence(
                 CLASS,
-                Identifier(),
-                Optional(TypeParameters()),
-                Optional(EXTENDS, ClassType()),
-                Optional(IMPLEMENTS, ClassTypeList()),
-                ClassBody()
+                identifier(),
+                optional(TypeParameters()),
+                optional(EXTENDS, classType()),
+                optional(IMPLEMENTS, classTypeList()),
+                classBody()
         );
     }
 
-    Rule ClassBody() {
-        return Sequence(LWING, ZeroOrMore(ClassBodyDeclaration()), RWING);
+    Rule classBody() {
+        return sequence(LWING, zeroOrMore(classBodyDeclaration()), RWING);
     }
 
-    Rule ClassBodyDeclaration() {
-        return FirstOf(
-                SEMI,
-                Sequence(Optional(STATIC), Block()),
-                Sequence(ZeroOrMore(Modifier()), MemberDecl())
-        );
+    Rule classBodyDeclaration() {
+        return firstOf(SEMI, sequence(optional(STATIC), block()),
+            sequence(zeroOrMore(modifier()), memberDecl()));
     }
 
-    Rule MemberDecl() {
-        return FirstOf(
-                Sequence(TypeParameters(), GenericMethodOrConstructorRest()),
-                Sequence(Type(), Identifier(), MethodDeclaratorRest()),
-                Sequence(Type(), VariableDeclarators(), SEMI),
-                Sequence(VOID, Identifier(), VoidMethodDeclaratorRest()),
-                Sequence(Identifier(), ConstructorDeclaratorRest()),
-                InterfaceDeclaration(),
-                ClassDeclaration(),
-                EnumDeclaration(),
-                AnnotationTypeDeclaration()
-        );
+    Rule memberDecl() {
+        return firstOf(
+            sequence(TypeParameters(), genericMethodOrConstructorRest()),
+            sequence(type(), identifier(), methodDeclaratorRest()),
+            sequence(type(), variableDeclarators(), SEMI),
+            sequence(VOID, identifier(), voidMethodDeclaratorRest()),
+            sequence(identifier(), constructorDeclaratorRest()),
+            interfaceDeclaration(), classDeclaration(), enumDeclaration(),
+            annotationTypeDeclaration());
     }
 
-    Rule GenericMethodOrConstructorRest() {
-        return FirstOf(
-                Sequence(FirstOf(Type(), VOID), Identifier(), MethodDeclaratorRest()),
-                Sequence(Identifier(), ConstructorDeclaratorRest())
-        );
+    Rule genericMethodOrConstructorRest() {
+        return firstOf(sequence(firstOf(type(), VOID), identifier(),
+            methodDeclaratorRest()),
+            sequence(identifier(), constructorDeclaratorRest()));
     }
 
-    Rule MethodDeclaratorRest() {
-        return Sequence(
-                FormalParameters(),
-                ZeroOrMore(Dim()),
-                Optional(THROWS, ClassTypeList()),
-                FirstOf(MethodBody(), SEMI)
-        );
+    Rule methodDeclaratorRest() {
+        return sequence(formalParameters(), zeroOrMore(dim()),
+            optional(THROWS, classTypeList()), firstOf(methodBody(), SEMI));
     }
 
-    Rule VoidMethodDeclaratorRest() {
-        return Sequence(
-                FormalParameters(),
-                Optional(THROWS, ClassTypeList()),
-                FirstOf(MethodBody(), SEMI)
-        );
+    Rule voidMethodDeclaratorRest() {
+        return sequence(formalParameters(), optional(THROWS, classTypeList()),
+            firstOf(methodBody(), SEMI));
     }
 
-    Rule ConstructorDeclaratorRest() {
-        return Sequence(FormalParameters(), Optional(THROWS, ClassTypeList()), MethodBody());
+    Rule constructorDeclaratorRest() {
+        return sequence(formalParameters(), optional(THROWS, classTypeList()),
+            methodBody());
     }
 
-    Rule MethodBody() {
-        return Block();
+    Rule methodBody() {
+        return block();
     }
 
     //-------------------------------------------------------------------------
     //  Interface Declaration
     //-------------------------------------------------------------------------
 
-    Rule InterfaceDeclaration() {
-        return Sequence(
-                INTERFACE,
-                Identifier(),
-                Optional(TypeParameters()),
-                Optional(EXTENDS, ClassTypeList()),
-                InterfaceBody()
-        );
+    Rule interfaceDeclaration() {
+        return sequence(INTERFACE, identifier(), optional(TypeParameters()),
+            optional(EXTENDS, classTypeList()), interfaceBody());
     }
 
-    Rule InterfaceBody() {
-        return Sequence(LWING, ZeroOrMore(InterfaceBodyDeclaration()), RWING);
+    Rule interfaceBody() {
+        return sequence(LWING, zeroOrMore(interfaceBodyDeclaration()), RWING);
     }
 
-    Rule InterfaceBodyDeclaration() {
-        return FirstOf(
-                Sequence(ZeroOrMore(Modifier()), InterfaceMemberDecl()),
-                SEMI
-        );
+    Rule interfaceBodyDeclaration() {
+        return firstOf(sequence(zeroOrMore(modifier()), interfaceMemberDecl()),
+            SEMI);
     }
 
-    Rule InterfaceMemberDecl() {
-        return FirstOf(
-                InterfaceMethodOrFieldDecl(),
-                InterfaceGenericMethodDecl(),
-                Sequence(VOID, Identifier(), VoidInterfaceMethodDeclaratorsRest()),
-                InterfaceDeclaration(),
-                AnnotationTypeDeclaration(),
-                ClassDeclaration(),
-                EnumDeclaration()
-        );
+    Rule interfaceMemberDecl() {
+        return firstOf(interfaceMethodOrFieldDecl(),
+            interfaceGenericMethodDecl(),
+            sequence(VOID, identifier(), voidInterfaceMethodDeclaratorsRest()),
+            interfaceDeclaration(), annotationTypeDeclaration(),
+            classDeclaration(), enumDeclaration());
     }
 
-    Rule InterfaceMethodOrFieldDecl() {
-        return Sequence(Sequence(Type(), Identifier()), InterfaceMethodOrFieldRest());
+    Rule interfaceMethodOrFieldDecl() {
+        return sequence(sequence(type(), identifier()),
+            interfaceMethodOrFieldRest());
     }
 
-    Rule InterfaceMethodOrFieldRest() {
-        return FirstOf(
-                Sequence(ConstantDeclaratorsRest(), SEMI),
-                InterfaceMethodDeclaratorRest()
-        );
+    Rule interfaceMethodOrFieldRest() {
+        return firstOf(sequence(constantDeclaratorsRest(), SEMI),
+            interfaceMethodDeclaratorRest());
     }
 
-    Rule InterfaceMethodDeclaratorRest() {
-        return Sequence(
-                FormalParameters(),
-                ZeroOrMore(Dim()),
-                Optional(THROWS, ClassTypeList()),
-                SEMI
-        );
+    Rule interfaceMethodDeclaratorRest() {
+        return sequence(formalParameters(), zeroOrMore(dim()),
+            optional(THROWS, classTypeList()), SEMI);
     }
 
-    Rule InterfaceGenericMethodDecl() {
-        return Sequence(TypeParameters(), FirstOf(Type(), VOID), Identifier(), InterfaceMethodDeclaratorRest());
+    Rule interfaceGenericMethodDecl() {
+        return sequence(TypeParameters(), firstOf(type(), VOID), identifier(),
+            interfaceMethodDeclaratorRest());
     }
 
-    Rule VoidInterfaceMethodDeclaratorsRest() {
-        return Sequence(FormalParameters(), Optional(THROWS, ClassTypeList()), SEMI);
+    Rule voidInterfaceMethodDeclaratorsRest() {
+        return sequence(formalParameters(), optional(THROWS, classTypeList()),
+            SEMI);
     }
 
-    Rule ConstantDeclaratorsRest() {
-        return Sequence(ConstantDeclaratorRest(), ZeroOrMore(COMMA, ConstantDeclarator()));
+    Rule constantDeclaratorsRest() {
+        return sequence(constantDeclaratorRest(),
+            zeroOrMore(COMMA, constantDeclarator()));
     }
 
-    Rule ConstantDeclarator() {
-        return Sequence(Identifier(), ConstantDeclaratorRest());
+    Rule constantDeclarator() {
+        return sequence(identifier(), constantDeclaratorRest());
     }
 
-    Rule ConstantDeclaratorRest() {
-        return Sequence(ZeroOrMore(Dim()), EQU, VariableInitializer());
+    Rule constantDeclaratorRest() {
+        return sequence(zeroOrMore(dim()), EQU, variableInitializer());
     }
 
     //-------------------------------------------------------------------------
     //  Enum Declaration
     //-------------------------------------------------------------------------
 
-    Rule EnumDeclaration() {
-        return Sequence(
-                ENUM,
-                Identifier(),
-                Optional(IMPLEMENTS, ClassTypeList()),
-                EnumBody()
-        );
+    Rule enumDeclaration() {
+        return sequence(ENUM, identifier(),
+            optional(IMPLEMENTS, classTypeList()), enumBody());
     }
 
-    Rule EnumBody() {
-        return Sequence(
-                LWING,
-                Optional(EnumConstants()),
-                Optional(COMMA),
-                Optional(EnumBodyDeclarations()),
-                RWING
-        );
+    Rule enumBody() {
+        return sequence(LWING, optional(enumConstants()), optional(COMMA),
+            optional(enumBodyDeclarations()), RWING);
     }
 
-    Rule EnumConstants() {
-        return Sequence(EnumConstant(), ZeroOrMore(COMMA, EnumConstant()));
+    Rule enumConstants() {
+        return sequence(enumConstant(), zeroOrMore(COMMA, enumConstant()));
     }
 
-    Rule EnumConstant() {
-        return Sequence(
-                ZeroOrMore(Annotation()),
-                Identifier(),
-                Optional(Arguments()),
-                Optional(ClassBody())
-        );
+    Rule enumConstant() {
+        return sequence(zeroOrMore(annotation()), identifier(),
+            optional(arguments()), optional(classBody()));
     }
 
-    Rule EnumBodyDeclarations() {
-        return Sequence(SEMI, ZeroOrMore(ClassBodyDeclaration()));
+    Rule enumBodyDeclarations() {
+        return sequence(SEMI, zeroOrMore(classBodyDeclaration()));
     }
 
     //-------------------------------------------------------------------------
     //  Variable Declarations
     //-------------------------------------------------------------------------    
 
-    Rule LocalVariableDeclarationStatement() {
-        return Sequence(ZeroOrMore(FirstOf(FINAL, Annotation())), Type(), VariableDeclarators(), SEMI);
+    Rule localVariableDeclarationStatement() {
+        return sequence(zeroOrMore(firstOf(FINAL, annotation())), type(),
+            variableDeclarators(), SEMI);
     }
 
-    Rule VariableDeclarators() {
-        return Sequence(VariableDeclarator(), ZeroOrMore(COMMA, VariableDeclarator()));
+    Rule variableDeclarators() {
+        return sequence(variableDeclarator(),
+            zeroOrMore(COMMA, variableDeclarator()));
     }
 
-    Rule VariableDeclarator() {
-        return Sequence(Identifier(), ZeroOrMore(Dim()), Optional(EQU, VariableInitializer()));
+    Rule variableDeclarator() {
+        return sequence(identifier(), zeroOrMore(dim()),
+            optional(EQU, variableInitializer()));
     }
 
     //-------------------------------------------------------------------------
     //  Formal Parameters
     //-------------------------------------------------------------------------
 
-    Rule FormalParameters() {
-        return Sequence(LPAR, Optional(FormalParameterDecls()), RPAR);
+    Rule formalParameters() {
+        return sequence(LPAR, optional(formalParameterDecls()), RPAR);
     }
 
-    Rule FormalParameter() {
-        return Sequence(ZeroOrMore(FirstOf(FINAL, Annotation())), Type(), VariableDeclaratorId());
+    Rule formalParameter() {
+        return sequence(zeroOrMore(firstOf(FINAL, annotation())), type(),
+            variableDeclaratorId());
     }
 
-    Rule FormalParameterDecls() {
-        return Sequence(ZeroOrMore(FirstOf(FINAL, Annotation())), Type(), FormalParameterDeclsRest());
+    Rule formalParameterDecls() {
+        return sequence(zeroOrMore(firstOf(FINAL, annotation())), type(),
+            formalParameterDeclsRest());
     }
 
-    Rule FormalParameterDeclsRest() {
-        return FirstOf(
-                Sequence(VariableDeclaratorId(), Optional(COMMA, FormalParameterDecls())),
-                Sequence(ELLIPSIS, VariableDeclaratorId())
-        );
+    Rule formalParameterDeclsRest() {
+        return firstOf(sequence(variableDeclaratorId(),
+            optional(COMMA, formalParameterDecls())),
+            sequence(ELLIPSIS, variableDeclaratorId()));
     }
 
-    Rule VariableDeclaratorId() {
-        return Sequence(Identifier(), ZeroOrMore(Dim()));
+    Rule variableDeclaratorId() {
+        return sequence(identifier(), zeroOrMore(dim()));
     }
 
     //-------------------------------------------------------------------------
     //  Statements
     //-------------------------------------------------------------------------    
 
-    Rule Block() {
-        return Sequence(LWING, BlockStatements(), RWING);
+    Rule block() {
+        return Sequence(LWING, blockStatements(), RWING);
     }
 
-    Rule BlockStatements() {
-        return ZeroOrMore(BlockStatement());
+    Rule blockStatements() {
+        return zeroOrMore(blockStatement());
     }
 
-    Rule BlockStatement() {
-        return FirstOf(
-                LocalVariableDeclarationStatement(),
-                Sequence(ZeroOrMore(Modifier()), FirstOf(ClassDeclaration(), EnumDeclaration())),
-                Statement()
+    Rule blockStatement() {
+        return firstOf(localVariableDeclarationStatement(),
+            sequence(zeroOrMore(modifier()),
+                firstOf(classDeclaration(), enumDeclaration())), statement());
+    }
+
+    Rule statement() {
+        return firstOf(block(),
+            sequence(ASSERT, expression(), optional(COLON, expression()), SEMI),
+            sequence(IF, parExpression(), statement(),
+                optional(ELSE, statement())),
+            sequence(FOR, LPAR, optional(forInit()), SEMI,
+                optional(expression()), SEMI, optional(forUpdate()), RPAR,
+                statement()),
+            sequence(FOR, LPAR, formalParameter(), COLON, expression(), RPAR,
+                statement()), sequence(WHILE, parExpression(), statement()),
+            sequence(DO, statement(), WHILE, parExpression(), SEMI),
+            sequence(TRY, block(),
+                firstOf(sequence(oneOrMore(catchBlock()), optional(
+                    finallyBlock())),
+                    finallyBlock())), sequence(SWITCH, parExpression(), LWING,
+                switchBlockStatementGroups(), RWING),
+            sequence(SYNCHRONIZED, parExpression(), block()),
+            sequence(RETURN, optional(expression()), SEMI),
+            sequence(THROW, expression(), SEMI),
+            sequence(BREAK, optional(identifier()), SEMI),
+            sequence(CONTINUE, optional(identifier()), SEMI),
+            sequence(sequence(identifier(), COLON), statement()),
+            sequence(statementExpression(), SEMI), SEMI
         );
     }
 
-    Rule Statement() {
-        return FirstOf(
-                Block(),
-                Sequence(ASSERT, Expression(), Optional(COLON, Expression()), SEMI),
-                Sequence(IF, ParExpression(), Statement(), Optional(ELSE, Statement())),
-                Sequence(FOR, LPAR, Optional(ForInit()), SEMI, Optional(Expression()), SEMI, Optional(ForUpdate()),
-                        RPAR, Statement()),
-                Sequence(FOR, LPAR, FormalParameter(), COLON, Expression(), RPAR, Statement()),
-                Sequence(WHILE, ParExpression(), Statement()),
-                Sequence(DO, Statement(), WHILE, ParExpression(), SEMI),
-                Sequence(TRY, Block(),
-                        FirstOf(Sequence(OneOrMore(Catch_()), Optional(Finally_())), Finally_())),
-                Sequence(SWITCH, ParExpression(), LWING, SwitchBlockStatementGroups(), RWING),
-                Sequence(SYNCHRONIZED, ParExpression(), Block()),
-                Sequence(RETURN, Optional(Expression()), SEMI),
-                Sequence(THROW, Expression(), SEMI),
-                Sequence(BREAK, Optional(Identifier()), SEMI),
-                Sequence(CONTINUE, Optional(Identifier()), SEMI),
-                Sequence(Sequence(Identifier(), COLON), Statement()),
-                Sequence(StatementExpression(), SEMI),
-                SEMI
+    Rule catchBlock() {
+        return sequence(CATCH, LPAR, formalParameter(), RPAR, block());
+    }
+
+    Rule finallyBlock() {
+        return sequence(FINALLY, block());
+    }
+
+    Rule switchBlockStatementGroups() {
+        return zeroOrMore(switchBlockStatementGroup());
+    }
+
+    Rule switchBlockStatementGroup() {
+        return sequence(switchLabel(), blockStatements());
+    }
+
+    Rule switchLabel() {
+        return firstOf(sequence(CASE, constantExpression(), COLON),
+            sequence(CASE, enumConstantName(), COLON), sequence(DEFAULT, COLON));
+    }
+
+    Rule forInit() {
+        return firstOf(
+            sequence(zeroOrMore(firstOf(FINAL, annotation())), type(),
+                variableDeclarators()), sequence(statementExpression(),
+                zeroOrMore(COMMA, statementExpression()))
         );
     }
 
-    Rule Catch_() {
-        return Sequence(CATCH, LPAR, FormalParameter(), RPAR, Block());
+    Rule forUpdate() {
+        return sequence(statementExpression(),
+            zeroOrMore(COMMA, statementExpression()));
     }
 
-    Rule Finally_() {
-        return Sequence(FINALLY, Block());
-    }
-
-    Rule SwitchBlockStatementGroups() {
-        return ZeroOrMore(SwitchBlockStatementGroup());
-    }
-
-    Rule SwitchBlockStatementGroup() {
-        return Sequence(SwitchLabel(), BlockStatements());
-    }
-
-    Rule SwitchLabel() {
-        return FirstOf(
-                Sequence(CASE, ConstantExpression(), COLON),
-                Sequence(CASE, EnumConstantName(), COLON),
-                Sequence(DEFAULT, COLON)
-        );
-    }
-
-    Rule ForInit() {
-        return FirstOf(
-                Sequence(ZeroOrMore(FirstOf(FINAL, Annotation())), Type(), VariableDeclarators()),
-                Sequence(StatementExpression(), ZeroOrMore(COMMA, StatementExpression()))
-        );
-    }
-
-    Rule ForUpdate() {
-        return Sequence(StatementExpression(), ZeroOrMore(COMMA, StatementExpression()));
-    }
-
-    Rule EnumConstantName() {
-        return Identifier();
+    Rule enumConstantName() {
+        return identifier();
     }
 
     //-------------------------------------------------------------------------
@@ -414,345 +362,284 @@ public class JavaParser extends BaseParser<Object> {
     //-------------------------------------------------------------------------
 
     // The following is more generous than the definition in section 14.8,
-    // which allows only specific forms of Expression.
+    // which allows only specific forms of expression.
 
-    Rule StatementExpression() {
-        return Expression();
+    Rule statementExpression() {
+        return expression();
     }
 
-    Rule ConstantExpression() {
-        return Expression();
+    Rule constantExpression() {
+        return expression();
     }
 
     // The following definition is part of the modification in JLS Chapter 18
-    // to minimize look ahead. In JLS Chapter 15.27, Expression is defined
+    // to minimize look ahead. In JLS Chapter 15.27, expression is defined
     // as AssignmentExpression, which is effectively defined as
-    // (LeftHandSide AssignmentOperator)* ConditionalExpression.
-    // The following is obtained by allowing ANY ConditionalExpression
+    // (LeftHandSide assignmentOperator)* conditionalExpression.
+    // The following is obtained by allowing ANY conditionalExpression
     // as LeftHandSide, which results in accepting statements like 5 = a.
 
-    Rule Expression() {
-        return Sequence(
-                ConditionalExpression(),
-                ZeroOrMore(AssignmentOperator(), ConditionalExpression())
+    Rule expression() {
+        return sequence(conditionalExpression(),
+            zeroOrMore(assignmentOperator(), conditionalExpression()));
+    }
+
+    Rule assignmentOperator() {
+        return firstOf(EQU, PLUSEQU, MINUSEQU, STAREQU, DIVEQU, ANDEQU, OREQU,
+            HATEQU, MODEQU, SLEQU, SREQU, BSREQU);
+    }
+
+    Rule conditionalExpression() {
+        return sequence(conditionalOrExpression(),
+            zeroOrMore(QUERY, expression(), COLON, conditionalOrExpression()));
+    }
+
+    Rule conditionalOrExpression() {
+        return sequence(conditionalAndExpression(),
+            zeroOrMore(OROR, conditionalAndExpression()));
+    }
+
+    Rule conditionalAndExpression() {
+        return sequence(inclusiveOrExpression(),
+            zeroOrMore(ANDAND, inclusiveOrExpression()));
+    }
+
+    Rule inclusiveOrExpression() {
+        return sequence(exclusiveOrExpression(),
+            zeroOrMore(OR, exclusiveOrExpression()));
+    }
+
+    Rule exclusiveOrExpression() {
+        return sequence(andExpression(), ZeroOrMore(HAT, andExpression()));
+    }
+
+    Rule andExpression() {
+        return sequence(equalityExpression(),
+            zeroOrMore(AND, equalityExpression()));
+    }
+
+    Rule equalityExpression() {
+        return sequence(relationalExpression(),
+            zeroOrMore(firstOf(EQUAL, NOTEQUAL), relationalExpression()));
+    }
+
+    Rule relationalExpression() {
+        return sequence(shiftExpression(), zeroOrMore(
+                firstOf(sequence(firstOf(LE, GE, LT, GT), shiftExpression()),
+                    sequence(INSTANCEOF, referenceType()))
+            )
         );
     }
 
-    Rule AssignmentOperator() {
-        return FirstOf(EQU, PLUSEQU, MINUSEQU, STAREQU, DIVEQU, ANDEQU, OREQU, HATEQU, MODEQU, SLEQU, SREQU, BSREQU);
+    Rule shiftExpression() {
+        return sequence(additiveExpression(),
+            zeroOrMore(firstOf(SL, SR, BSR), additiveExpression()));
     }
 
-    Rule ConditionalExpression() {
-        return Sequence(
-                ConditionalOrExpression(),
-                ZeroOrMore(QUERY, Expression(), COLON, ConditionalOrExpression())
+    Rule additiveExpression() {
+        return sequence(multiplicativeExpression(),
+            zeroOrMore(firstOf(PLUS, MINUS), multiplicativeExpression()));
+    }
+
+    Rule multiplicativeExpression() {
+        return sequence(unaryExpression(),
+            zeroOrMore(firstOf(STAR, DIV, MOD), unaryExpression()));
+    }
+
+    Rule unaryExpression() {
+        return firstOf(sequence(prefixOp(), unaryExpression()),
+            sequence(LPAR, type(), RPAR, unaryExpression()),
+            sequence(primary(), zeroOrMore(selector()), zeroOrMore(postfixOp())));
+    }
+
+    Rule primary() {
+        return firstOf(parExpression(), sequence(nonWildcardTypeArguments(),
+                firstOf(explicitGenericInvocationSuffix(),
+                    sequence(THIS, arguments()))),
+            sequence(THIS, optional(arguments())),
+            sequence(SUPER, superSuffix()), literal(), sequence(NEW, creator()),
+            sequence(qualifiedIdentifier(), optional(identifierSuffix())),
+            sequence(basicType(), zeroOrMore(dim()), DOT, CLASS),
+            sequence(VOID, DOT, CLASS)
         );
     }
 
-    Rule ConditionalOrExpression() {
-        return Sequence(
-                ConditionalAndExpression(),
-                ZeroOrMore(OROR, ConditionalAndExpression())
-        );
-    }
-
-    Rule ConditionalAndExpression() {
-        return Sequence(
-                InclusiveOrExpression(),
-                ZeroOrMore(ANDAND, InclusiveOrExpression())
-        );
-    }
-
-    Rule InclusiveOrExpression() {
-        return Sequence(
-                ExclusiveOrExpression(),
-                ZeroOrMore(OR, ExclusiveOrExpression())
-        );
-    }
-
-    Rule ExclusiveOrExpression() {
-        return Sequence(
-                AndExpression(),
-                ZeroOrMore(HAT, AndExpression())
-        );
-    }
-
-    Rule AndExpression() {
-        return Sequence(
-                EqualityExpression(),
-                ZeroOrMore(AND, EqualityExpression())
-        );
-    }
-
-    Rule EqualityExpression() {
-        return Sequence(
-                RelationalExpression(),
-                ZeroOrMore(FirstOf(EQUAL, NOTEQUAL), RelationalExpression())
-        );
-    }
-
-    Rule RelationalExpression() {
-        return Sequence(
-                ShiftExpression(),
-                ZeroOrMore(
-                        FirstOf(
-                                Sequence(FirstOf(LE, GE, LT, GT), ShiftExpression()),
-                                Sequence(INSTANCEOF, ReferenceType())
-                        )
+    Rule identifierSuffix() {
+        return firstOf(sequence(LBRK,
+                firstOf(sequence(RBRK, zeroOrMore(dim()), DOT, CLASS),
+                    sequence(expression(), RBRK))
+            ), arguments(), sequence(DOT,
+                firstOf(CLASS, explicitGenericInvocation(), THIS,
+                    sequence(SUPER, arguments()),
+                    sequence(NEW, optional(nonWildcardTypeArguments()),
+                        innerCreator())
                 )
+            )
         );
     }
 
-    Rule ShiftExpression() {
-        return Sequence(
-                AdditiveExpression(),
-                ZeroOrMore(FirstOf(SL, SR, BSR), AdditiveExpression())
-        );
+    Rule explicitGenericInvocation() {
+        return sequence(nonWildcardTypeArguments(),
+            explicitGenericInvocationSuffix());
     }
 
-    Rule AdditiveExpression() {
-        return Sequence(
-                MultiplicativeExpression(),
-                ZeroOrMore(FirstOf(PLUS, MINUS), MultiplicativeExpression())
-        );
+    Rule nonWildcardTypeArguments() {
+        return sequence(LPOINT, referenceType(),
+            zeroOrMore(COMMA, referenceType()), RPOINT);
     }
 
-    Rule MultiplicativeExpression() {
-        return Sequence(
-                UnaryExpression(),
-                ZeroOrMore(FirstOf(STAR, DIV, MOD), UnaryExpression())
-        );
+    Rule explicitGenericInvocationSuffix() {
+        return firstOf(sequence(SUPER, superSuffix()),
+            sequence(identifier(), arguments()));
     }
 
-    Rule UnaryExpression() {
-        return FirstOf(
-                Sequence(PrefixOp(), UnaryExpression()),
-                Sequence(LPAR, Type(), RPAR, UnaryExpression()),
-                Sequence(Primary(), ZeroOrMore(Selector()), ZeroOrMore(PostFixOp()))
-        );
+    Rule prefixOp() {
+        return firstOf(INC, DEC, BANG, TILDA, PLUS, MINUS);
     }
 
-    Rule Primary() {
-        return FirstOf(
-                ParExpression(),
-                Sequence(
-                        NonWildcardTypeArguments(),
-                        FirstOf(ExplicitGenericInvocationSuffix(), Sequence(THIS, Arguments()))
-                ),
-                Sequence(THIS, Optional(Arguments())),
-                Sequence(SUPER, SuperSuffix()),
-                Literal(),
-                Sequence(NEW, Creator()),
-                Sequence(QualifiedIdentifier(), Optional(IdentifierSuffix())),
-                Sequence(BasicType(), ZeroOrMore(Dim()), DOT, CLASS),
-                Sequence(VOID, DOT, CLASS)
-        );
+    Rule postfixOp() {
+        return firstOf(INC, DEC);
     }
 
-    Rule IdentifierSuffix() {
-        return FirstOf(
-                Sequence(LBRK,
-                        FirstOf(
-                                Sequence(RBRK, ZeroOrMore(Dim()), DOT, CLASS),
-                                Sequence(Expression(), RBRK)
-                        )
-                ),
-                Arguments(),
-                Sequence(
-                        DOT,
-                        FirstOf(
-                                CLASS,
-                                ExplicitGenericInvocation(),
-                                THIS,
-                                Sequence(SUPER, Arguments()),
-                                Sequence(NEW, Optional(NonWildcardTypeArguments()), InnerCreator())
-                        )
-                )
-        );
+    Rule selector() {
+        return firstOf(sequence(DOT, identifier(), optional(arguments())),
+            sequence(DOT, explicitGenericInvocation()), sequence(DOT, THIS),
+            sequence(DOT, SUPER, superSuffix()),
+            sequence(DOT, NEW, optional(nonWildcardTypeArguments()),
+                innerCreator()), dimExpr());
     }
 
-    Rule ExplicitGenericInvocation() {
-        return Sequence(NonWildcardTypeArguments(), ExplicitGenericInvocationSuffix());
-    }
-
-    Rule NonWildcardTypeArguments() {
-        return Sequence(LPOINT, ReferenceType(), ZeroOrMore(COMMA, ReferenceType()), RPOINT);
-    }
-
-    Rule ExplicitGenericInvocationSuffix() {
-        return FirstOf(
-                Sequence(SUPER, SuperSuffix()),
-                Sequence(Identifier(), Arguments())
-        );
-    }
-
-    Rule PrefixOp() {
-        return FirstOf(INC, DEC, BANG, TILDA, PLUS, MINUS);
-    }
-
-    Rule PostFixOp() {
-        return FirstOf(INC, DEC);
-    }
-
-    Rule Selector() {
-        return FirstOf(
-                Sequence(DOT, Identifier(), Optional(Arguments())),
-                Sequence(DOT, ExplicitGenericInvocation()),
-                Sequence(DOT, THIS),
-                Sequence(DOT, SUPER, SuperSuffix()),
-                Sequence(DOT, NEW, Optional(NonWildcardTypeArguments()), InnerCreator()),
-                DimExpr()
-        );
-    }
-
-    Rule SuperSuffix() {
-        return FirstOf(Arguments(), Sequence(DOT, Identifier(), Optional(Arguments())));
+    Rule superSuffix() {
+        return firstOf(arguments(),
+            sequence(DOT, identifier(), optional(arguments())));
     }
 
     @MemoMismatches
-    Rule BasicType() {
-        return Sequence(
-                FirstOf("byte", "short", "char", "int", "long", "float", "double", "boolean"),
-                TestNot(LetterOrDigit()),
-                Spacing()
+    Rule basicType() {
+        return sequence(
+            firstOf("byte", "short", "char", "int", "long", "float", "double",
+                "boolean"), testNot(letterOrDigit()), spacing());
+    }
+
+    Rule arguments() {
+        return sequence(LPAR,
+            optional(expression(), zeroOrMore(COMMA, expression())), RPAR);
+    }
+
+    Rule creator() {
+        return firstOf(
+            sequence(optional(nonWildcardTypeArguments()), createdName(),
+                classCreatorRest()),
+            sequence(optional(nonWildcardTypeArguments()),
+                firstOf(classType(), basicType()), arrayCreatorRest()));
+    }
+
+    Rule createdName() {
+        return sequence(identifier(), optional(nonWildcardTypeArguments()),
+            zeroOrMore(DOT, identifier(), optional(nonWildcardTypeArguments()))
         );
     }
 
-    Rule Arguments() {
-        return Sequence(
-                LPAR,
-                Optional(Expression(), ZeroOrMore(COMMA, Expression())),
-                RPAR
-        );
-    }
-
-    Rule Creator() {
-        return FirstOf(
-                Sequence(Optional(NonWildcardTypeArguments()), CreatedName(), ClassCreatorRest()),
-                Sequence(Optional(NonWildcardTypeArguments()), FirstOf(ClassType(), BasicType()), ArrayCreatorRest())
-        );
-    }
-
-    Rule CreatedName() {
-        return Sequence(
-                Identifier(), Optional(NonWildcardTypeArguments()),
-                ZeroOrMore(DOT, Identifier(), Optional(NonWildcardTypeArguments()))
-        );
-    }
-
-    Rule InnerCreator() {
-        return Sequence(Identifier(), ClassCreatorRest());
+    Rule innerCreator() {
+        return sequence(identifier(), classCreatorRest());
     }
 
     // The following is more generous than JLS 15.10. According to that definition,
-    // BasicType must be followed by at least one DimExpr or by ArrayInitializer.
-    Rule ArrayCreatorRest() {
-        return Sequence(
-                LBRK,
-                FirstOf(
-                        Sequence(RBRK, ZeroOrMore(Dim()), ArrayInitializer()),
-                        Sequence(Expression(), RBRK, ZeroOrMore(DimExpr()), ZeroOrMore(Dim()))
-                )
+    // basicType must be followed by at least one dimExpr or by arrayInitializer.
+    Rule arrayCreatorRest() {
+        return sequence(LBRK,
+            firstOf(sequence(RBRK, zeroOrMore(dim()), arrayInitializer()),
+                sequence(expression(), RBRK, zeroOrMore(dimExpr()),
+                    zeroOrMore(dim()))
+            )
         );
     }
 
-    Rule ClassCreatorRest() {
-        return Sequence(Arguments(), Optional(ClassBody()));
+    Rule classCreatorRest() {
+        return sequence(arguments(), optional(classBody()));
     }
 
-    Rule ArrayInitializer() {
-        return Sequence(
-                LWING,
-                Optional(
-                    VariableInitializer(),
-                    ZeroOrMore(COMMA, VariableInitializer())
-                ),
-                Optional(COMMA),
-                RWING
+    Rule arrayInitializer() {
+        return sequence(LWING, optional(variableInitializer(),
+                zeroOrMore(COMMA, variableInitializer())), optional(COMMA),
+            RWING
         );
     }
 
-    Rule VariableInitializer() {
-        return FirstOf(ArrayInitializer(), Expression());
+    Rule variableInitializer() {
+        return firstOf(arrayInitializer(), expression());
     }
 
-    Rule ParExpression() {
-        return Sequence(LPAR, Expression(), RPAR);
+    Rule parExpression() {
+        return sequence(LPAR, expression(), RPAR);
     }
 
-    Rule QualifiedIdentifier() {
-        return Sequence(Identifier(), ZeroOrMore(DOT, Identifier()));
+    Rule qualifiedIdentifier() {
+        return sequence(identifier(), zeroOrMore(DOT, identifier()));
     }
 
-    Rule Dim() {
-        return Sequence(LBRK, RBRK);
+    Rule dim() {
+        return sequence(LBRK, RBRK);
     }
 
-    Rule DimExpr() {
-        return Sequence(LBRK, Expression(), RBRK);
+    Rule dimExpr() {
+        return sequence(LBRK, expression(), RBRK);
     }
 
     //-------------------------------------------------------------------------
     //  Types and Modifiers
     //-------------------------------------------------------------------------
 
-    Rule Type() {
-        return Sequence(FirstOf(BasicType(), ClassType()), ZeroOrMore(Dim()));
+    Rule type() {
+        return sequence(firstOf(basicType(), classType()), zeroOrMore(dim()));
     }
 
-    Rule ReferenceType() {
-        return FirstOf(
-                Sequence(BasicType(), OneOrMore(Dim())),
-                Sequence(ClassType(), ZeroOrMore(Dim()))
-        );
+    Rule referenceType() {
+        return firstOf(sequence(basicType(), oneOrMore(dim())),
+            sequence(classType(), zeroOrMore(dim())));
     }
 
-    Rule ClassType() {
-        return Sequence(
-                Identifier(), Optional(TypeArguments()),
-                ZeroOrMore(DOT, Identifier(), Optional(TypeArguments()))
-        );
+    Rule classType() {
+        return sequence(identifier(), optional(typeArguments()),
+            zeroOrMore(DOT, identifier(), optional(typeArguments())));
     }
 
-    Rule ClassTypeList() {
-        return Sequence(ClassType(), ZeroOrMore(COMMA, ClassType()));
+    Rule classTypeList() {
+        return sequence(classType(), zeroOrMore(COMMA, classType()));
     }
 
-    Rule TypeArguments() {
-        return Sequence(LPOINT, TypeArgument(), ZeroOrMore(COMMA, TypeArgument()), RPOINT);
+    Rule typeArguments() {
+        return sequence(LPOINT, typeArgument(),
+            zeroOrMore(COMMA, typeArgument()), RPOINT);
     }
 
-    Rule TypeArgument() {
-        return FirstOf(
-                ReferenceType(),
-                Sequence(QUERY, Optional(FirstOf(EXTENDS, SUPER), ReferenceType()))
-        );
+    Rule typeArgument() {
+        return firstOf(referenceType(),
+            sequence(QUERY, optional(firstOf(EXTENDS, SUPER), referenceType())));
     }
 
     Rule TypeParameters() {
-        return Sequence(LPOINT, TypeParameter(), ZeroOrMore(COMMA, TypeParameter()), RPOINT);
+        return sequence(LPOINT, typeParameter(),
+            zeroOrMore(COMMA, typeParameter()), RPOINT);
     }
 
-    Rule TypeParameter() {
-        return Sequence(Identifier(), Optional(EXTENDS, Bound()));
+    Rule typeParameter() {
+        return sequence(identifier(), optional(EXTENDS, bound()));
     }
 
-    Rule Bound() {
-        return Sequence(ClassType(), ZeroOrMore(AND, ClassType()));
+    Rule bound() {
+        return sequence(classType(), zeroOrMore(AND, classType()));
     }
 
-    // the following common definition of Modifier is part of the modification
+    // the following common definition of modifier is part of the modification
     // in JLS Chapter 18 to minimize look ahead. The main body of JLS has
     // different lists of modifiers for different language elements.
-    Rule Modifier() {
-        return FirstOf(
-                Annotation(),
-                Sequence(
-                        FirstOf("public", "protected", "private", "static", "abstract", "final", "native",
-                                "synchronized", "transient", "volatile", "strictfp"),
-                        TestNot(LetterOrDigit()),
-                        Spacing()
-                )
+    Rule modifier() {
+        return firstOf(annotation(), sequence(
+                firstOf("public", "protected", "private", "static", "abstract",
+                    "final", "native", "synchronized", "transient", "volatile",
+                    "strictfp"), testNot(letterOrDigit()), spacing()
+            )
         );
     }
 
@@ -760,104 +647,99 @@ public class JavaParser extends BaseParser<Object> {
     //  Annotations
     //-------------------------------------------------------------------------    
 
-    Rule AnnotationTypeDeclaration() {
-        return Sequence(AT, INTERFACE, Identifier(), AnnotationTypeBody());
+    Rule annotationTypeDeclaration() {
+        return sequence(AT, INTERFACE, identifier(), annotationTypeBody());
     }
 
-    Rule AnnotationTypeBody() {
-        return Sequence(LWING, ZeroOrMore(AnnotationTypeElementDeclaration()), RWING);
+    Rule annotationTypeBody() {
+        return sequence(LWING, zeroOrMore(annotationTypeElementDeclaration()),
+            RWING);
     }
 
-    Rule AnnotationTypeElementDeclaration() {
-        return FirstOf(
-                Sequence(ZeroOrMore(Modifier()), AnnotationTypeElementRest()),
-                SEMI
-        );
+    Rule annotationTypeElementDeclaration() {
+        return firstOf(
+            sequence(zeroOrMore(modifier()), annotationTypeElementRest()), SEMI);
     }
 
-    Rule AnnotationTypeElementRest() {
-        return FirstOf(
-                Sequence(Type(), AnnotationMethodOrConstantRest(), SEMI),
-                ClassDeclaration(),
-                EnumDeclaration(),
-                InterfaceDeclaration(),
-                AnnotationTypeDeclaration()
-        );
+    Rule annotationTypeElementRest() {
+        return firstOf(sequence(type(), annotationMethodOrConstantRest(), SEMI),
+            classDeclaration(), enumDeclaration(), interfaceDeclaration(),
+            annotationTypeDeclaration());
     }
 
-    Rule AnnotationMethodOrConstantRest() {
-        return FirstOf(AnnotationMethodRest(), AnnotationConstantRest());
+    Rule annotationMethodOrConstantRest() {
+        return firstOf(annotationMethodRest(), annotationConstantRest());
     }
 
-    Rule AnnotationMethodRest() {
-        return Sequence(Identifier(), LPAR, RPAR, Optional(DefaultValue()));
+    Rule annotationMethodRest() {
+        return sequence(identifier(), LPAR, RPAR, optional(defaultValue()));
     }
 
-    Rule AnnotationConstantRest() {
-        return VariableDeclarators();
+    Rule annotationConstantRest() {
+        return variableDeclarators();
     }
 
-    Rule DefaultValue() {
-        return Sequence(DEFAULT, ElementValue());
+    Rule defaultValue() {
+        return sequence(DEFAULT, elementValue());
     }
 
     @MemoMismatches
-    Rule Annotation() {
-        return Sequence(AT, QualifiedIdentifier(), Optional(AnnotationRest()));
+    Rule annotation() {
+        return sequence(AT, qualifiedIdentifier(), optional(annotationRest()));
     }
 
-    Rule AnnotationRest() {
-        return FirstOf(NormalAnnotationRest(), SingleElementAnnotationRest());
+    Rule annotationRest() {
+        return firstOf(normalAnnotationRest(), singleElementAnnotationRest());
     }
 
-    Rule NormalAnnotationRest() {
-        return Sequence(LPAR, Optional(ElementValuePairs()), RPAR);
+    Rule normalAnnotationRest() {
+        return sequence(LPAR, optional(elementValuePairs()), RPAR);
     }
 
-    Rule ElementValuePairs() {
-        return Sequence(ElementValuePair(), ZeroOrMore(COMMA, ElementValuePair()));
+    Rule elementValuePairs() {
+        return sequence(elementValuePair(),
+            zeroOrMore(COMMA, elementValuePair()));
     }
 
-    Rule ElementValuePair() {
-        return Sequence(Identifier(), EQU, ElementValue());
+    Rule elementValuePair() {
+        return sequence(identifier(), EQU, elementValue());
     }
 
-    Rule ElementValue() {
-        return FirstOf(ConditionalExpression(), Annotation(), ElementValueArrayInitializer());
+    Rule elementValue() {
+        return firstOf(conditionalExpression(), annotation(),
+            elementValueArrayInitializer());
     }
 
-    Rule ElementValueArrayInitializer() {
-        return Sequence(LWING, Optional(ElementValues()), Optional(COMMA), RWING);
+    Rule elementValueArrayInitializer() {
+        return sequence(LWING, optional(elementValues()), optional(COMMA),
+            RWING);
     }
 
-    Rule ElementValues() {
-        return Sequence(ElementValue(), ZeroOrMore(COMMA, ElementValue()));
+    Rule elementValues() {
+        return sequence(elementValue(), zeroOrMore(COMMA, elementValue()));
     }
 
-    Rule SingleElementAnnotationRest() {
-        return Sequence(LPAR, ElementValue(), RPAR);
+    Rule singleElementAnnotationRest() {
+        return sequence(LPAR, elementValue(), RPAR);
     }
 
     //-------------------------------------------------------------------------
-    //  JLS 3.6-7  Spacing
+    //  JLS 3.6-7  spacing
     //-------------------------------------------------------------------------
 
     @SuppressNode
-    Rule Spacing() {
-        return ZeroOrMore(FirstOf(
+    Rule spacing() {
+        return zeroOrMore(firstOf(
 
-                // whitespace
-                OneOrMore(AnyOf(" \t\r\n\f").label("Whitespace")),
+            // whitespace
+            oneOrMore(anyOf(" \t\r\n\f").label("Whitespace")),
 
-                // traditional comment
-                Sequence("/*", ZeroOrMore(TestNot("*/"), ANY), "*/"),
+            // traditional comment
+            sequence("/*", zeroOrMore(testNot("*/"), ANY), "*/"),
 
-                // end of line comment
-                Sequence(
-                        "//",
-                        ZeroOrMore(TestNot(AnyOf("\r\n")), ANY),
-                        FirstOf("\r\n", '\r', '\n', EOI)
-                )
+            // end of line comment
+            sequence("//", zeroOrMore(testNot(anyOf("\r\n")), ANY),
+                firstOf("\r\n", '\r', '\n', EOI))
         ));
     }
 
@@ -867,24 +749,26 @@ public class JavaParser extends BaseParser<Object> {
 
     @SuppressSubnodes
     @MemoMismatches
-    Rule Identifier() {
-        return Sequence(TestNot(Keyword()), Letter(), ZeroOrMore(LetterOrDigit()), Spacing());
+    Rule identifier() {
+        return sequence(testNot(keyword()), letter(),
+            zeroOrMore(letterOrDigit()), spacing());
     }
 
     // JLS defines letters and digits as Unicode characters recognized
     // as such by special Java procedures.
 
-    Rule Letter() {
+    Rule letter() {
         // switch to this "reduced" character space version for a ~10% parser performance speedup
         //return FirstOf(CharRange('a', 'z'), CharRange('A', 'Z'), '_', '$');
-        return FirstOf(Sequence('\\', UnicodeEscape()), new JavaLetterMatcher());
+        return firstOf(sequence('\\', unicodeEscape()), new JavaLetterMatcher());
     }
 
     @MemoMismatches
-    Rule LetterOrDigit() {
+    Rule letterOrDigit() {
         // switch to this "reduced" character space version for a ~10% parser performance speedup
         //return FirstOf(CharRange('a', 'z'), CharRange('A', 'Z'), CharRange('0', '9'), '_', '$');
-        return FirstOf(Sequence('\\', UnicodeEscape()), new JavaLetterOrDigitMatcher());
+        return firstOf(sequence('\\', unicodeEscape()),
+            new JavaLetterOrDigitMatcher());
     }
 
     //-------------------------------------------------------------------------
@@ -892,229 +776,209 @@ public class JavaParser extends BaseParser<Object> {
     //-------------------------------------------------------------------------
 
     @MemoMismatches
-    Rule Keyword() {
-        return Sequence(
-                FirstOf("assert", "break", "case", "catch", "class", "const", "continue", "default", "do", "else",
-                        "enum", "extends", "finally", "final", "for", "goto", "if", "implements", "import", "interface",
-                        "instanceof", "new", "package", "return", "static", "super", "switch", "synchronized", "this",
-                        "throws", "throw", "try", "void", "while"),
-                TestNot(LetterOrDigit())
+    Rule keyword() {
+        return sequence(
+            firstOf("assert", "break", "case", "catch", "class", "const",
+                "continue", "default", "do", "else", "enum", "extends",
+                "finally", "final", "for", "goto", "if", "implements", "import",
+                "interface", "instanceof", "new", "package", "return", "static",
+                "super", "switch", "synchronized", "this", "throws", "throw",
+                "try", "void", "while"), testNot(letterOrDigit())
         );
     }
 
-    public final Rule ASSERT = Keyword("assert");
-    public final Rule BREAK = Keyword("break");
-    public final Rule CASE = Keyword("case");
-    public final Rule CATCH = Keyword("catch");
-    public final Rule CLASS = Keyword("class");
-    public final Rule CONTINUE = Keyword("continue");
-    public final Rule DEFAULT = Keyword("default");
-    public final Rule DO = Keyword("do");
-    public final Rule ELSE = Keyword("else");
-    public final Rule ENUM = Keyword("enum");
-    public final Rule EXTENDS = Keyword("extends");
-    public final Rule FINALLY = Keyword("finally");
-    public final Rule FINAL = Keyword("final");
-    public final Rule FOR = Keyword("for");
-    public final Rule IF = Keyword("if");
-    public final Rule IMPLEMENTS = Keyword("implements");
-    public final Rule IMPORT = Keyword("import");
-    public final Rule INTERFACE = Keyword("interface");
-    public final Rule INSTANCEOF = Keyword("instanceof");
-    public final Rule NEW = Keyword("new");
-    public final Rule PACKAGE = Keyword("package");
-    public final Rule RETURN = Keyword("return");
-    public final Rule STATIC = Keyword("static");
-    public final Rule SUPER = Keyword("super");
-    public final Rule SWITCH = Keyword("switch");
-    public final Rule SYNCHRONIZED = Keyword("synchronized");
-    public final Rule THIS = Keyword("this");
-    public final Rule THROWS = Keyword("throws");
-    public final Rule THROW = Keyword("throw");
-    public final Rule TRY = Keyword("try");
-    public final Rule VOID = Keyword("void");
-    public final Rule WHILE = Keyword("while");
+    public final Rule ASSERT = keyword("assert");
+    public final Rule BREAK = keyword("break");
+    public final Rule CASE = keyword("case");
+    public final Rule CATCH = keyword("catch");
+    public final Rule CLASS = keyword("class");
+    public final Rule CONTINUE = keyword("continue");
+    public final Rule DEFAULT = keyword("default");
+    public final Rule DO = keyword("do");
+    public final Rule ELSE = keyword("else");
+    public final Rule ENUM = keyword("enum");
+    public final Rule EXTENDS = keyword("extends");
+    public final Rule FINALLY = keyword("finally");
+    public final Rule FINAL = keyword("final");
+    public final Rule FOR = keyword("for");
+    public final Rule IF = keyword("if");
+    public final Rule IMPLEMENTS = keyword("implements");
+    public final Rule IMPORT = keyword("import");
+    public final Rule INTERFACE = keyword("interface");
+    public final Rule INSTANCEOF = keyword("instanceof");
+    public final Rule NEW = keyword("new");
+    public final Rule PACKAGE = keyword("package");
+    public final Rule RETURN = keyword("return");
+    public final Rule STATIC = keyword("static");
+    public final Rule SUPER = keyword("super");
+    public final Rule SWITCH = keyword("switch");
+    public final Rule SYNCHRONIZED = keyword("synchronized");
+    public final Rule THIS = keyword("this");
+    public final Rule THROWS = keyword("throws");
+    public final Rule THROW = keyword("throw");
+    public final Rule TRY = keyword("try");
+    public final Rule VOID = keyword("void");
+    public final Rule WHILE = keyword("while");
 
     @SuppressNode
     @DontLabel
-    Rule Keyword(String keyword) {
-        return Terminal(keyword, LetterOrDigit());
+    Rule keyword(String keyword) {
+        return terminal(keyword, letterOrDigit());
     }
 
     //-------------------------------------------------------------------------
     //  JLS 3.10  Literals
     //-------------------------------------------------------------------------
 
-    Rule Literal() {
-        return Sequence(
-                FirstOf(
-                        FloatLiteral(),
-                        IntegerLiteral(),
-                        CharLiteral(),
-                        StringLiteral(),
-                        Sequence("true", TestNot(LetterOrDigit())),
-                        Sequence("false", TestNot(LetterOrDigit())),
-                        Sequence("null", TestNot(LetterOrDigit()))
-                ),
-                Spacing()
+    Rule literal() {
+        return sequence(firstOf(floatLiteral(), integerLiteral(), charLiteral(),
+                stringLiteral(), sequence("true", testNot(letterOrDigit())),
+                sequence("false", testNot(letterOrDigit())),
+                sequence("null", testNot(letterOrDigit()))), spacing()
         );
     }
 
     @SuppressSubnodes
-    Rule IntegerLiteral() {
-        return Sequence(FirstOf(HexNumeral(), OctalNumeral(), DecimalNumeral()), Optional(AnyOf("lL")));
+    Rule integerLiteral() {
+        return sequence(firstOf(hexNumeral(), octalNumeral(), decimalNumeral()),
+            optional(anyOf("lL")));
     }
 
     @SuppressSubnodes
-    Rule DecimalNumeral() {
-        return FirstOf('0', Sequence(CharRange('1', '9'), ZeroOrMore(Digit())));
+    Rule decimalNumeral() {
+        return firstOf('0', sequence(charRange('1', '9'), zeroOrMore(digit())));
     }
 
     @SuppressSubnodes
 
     @MemoMismatches
-    Rule HexNumeral() {
-        return Sequence('0', IgnoreCase('x'), OneOrMore(HexDigit()));
-    }
-
-    Rule HexDigit() {
-        return FirstOf(CharRange('a', 'f'), CharRange('A', 'F'), CharRange('0', '9'));
+    Rule hexNumeral() {
+        return sequence('0', ignoreCase('x'), oneOrMore(hexDigit()));
     }
 
     @SuppressSubnodes
-    Rule OctalNumeral() {
-        return Sequence('0', OneOrMore(CharRange('0', '7')));
+    Rule octalNumeral() {
+        return sequence('0', oneOrMore(charRange('0', '7')));
     }
 
-    Rule FloatLiteral() {
-        return FirstOf(HexFloat(), DecimalFloat());
-    }
-
-    @SuppressSubnodes
-    Rule DecimalFloat() {
-        return FirstOf(
-                Sequence(OneOrMore(Digit()), '.', ZeroOrMore(Digit()), Optional(Exponent()), Optional(AnyOf("fFdD"))),
-                Sequence('.', OneOrMore(Digit()), Optional(Exponent()), Optional(AnyOf("fFdD"))),
-                Sequence(OneOrMore(Digit()), Exponent(), Optional(AnyOf("fFdD"))),
-                Sequence(OneOrMore(Digit()), Optional(Exponent()), AnyOf("fFdD"))
-        );
-    }
-
-    Rule Exponent() {
-        return Sequence(AnyOf("eE"), Optional(AnyOf("+-")), OneOrMore(Digit()));
-    }
-
-    Rule Digit() {
-        return CharRange('0', '9');
+    Rule floatLiteral() {
+        return firstOf(hexFloat(), decimalFloat());
     }
 
     @SuppressSubnodes
-    Rule HexFloat() {
-        return Sequence(HexSignificant(), BinaryExponent(), Optional(AnyOf("fFdD")));
-    }
-
-    Rule HexSignificant() {
-        return FirstOf(
-                Sequence(FirstOf("0x", "0X"), ZeroOrMore(HexDigit()), '.', OneOrMore(HexDigit())),
-                Sequence(HexNumeral(), Optional('.'))
+    Rule decimalFloat() {
+        return firstOf(sequence(oneOrMore(digit()), '.', zeroOrMore(digit()),
+                optional(exponent()), optional(anyOf("fFdD"))),
+            sequence('.', oneOrMore(digit()), optional(exponent()),
+                optional(anyOf("fFdD"))),
+            sequence(oneOrMore(digit()), exponent(), optional(anyOf("fFdD"))),
+            sequence(oneOrMore(digit()), optional(exponent()), anyOf("fFdD"))
         );
     }
 
-    Rule BinaryExponent() {
-        return Sequence(AnyOf("pP"), Optional(AnyOf("+-")), OneOrMore(Digit()));
+    Rule exponent() {
+        return sequence(anyOf("eE"), optional(anyOf("+-")), oneOrMore(digit()));
     }
 
-    Rule CharLiteral() {
-        return Sequence(
-                '\'',
-                FirstOf(Escape(), Sequence(TestNot(AnyOf("'\\")), ANY)).suppressSubnodes(),
-                '\''
+    @SuppressSubnodes
+    Rule hexFloat() {
+        return sequence(hexSignificant(), binaryExponent(),
+            optional(anyOf("fFdD")));
+    }
+
+    Rule hexSignificant() {
+        return firstOf(
+            sequence(firstOf("0x", "0X"), zeroOrMore(hexDigit()), '.',
+                oneOrMore(hexDigit())), sequence(hexNumeral(), optional('.')));
+    }
+
+    Rule binaryExponent() {
+        return sequence(anyOf("pP"), optional(anyOf("+-")), oneOrMore(digit()));
+    }
+
+    Rule charLiteral() {
+        return sequence('\'',
+            firstOf(escape(), sequence(testNot(anyOf("'\\")), ANY))
+                .suppressSubnodes(), '\'');
+    }
+
+    Rule stringLiteral() {
+        return sequence('"', zeroOrMore(
+                firstOf(escape(), sequence(testNot(anyOf("\r\n\"\\")), ANY))
+            ).suppressSubnodes(), '"'
         );
     }
 
-    Rule StringLiteral() {
-        return Sequence(
-                '"',
-                ZeroOrMore(
-                        FirstOf(
-                                Escape(),
-                                Sequence(TestNot(AnyOf("\r\n\"\\")), ANY)
-                        )
-                ).suppressSubnodes(),
-                '"'
-        );
+    Rule escape() {
+        return sequence('\\',
+            firstOf(anyOf("btnfr\"\'\\"), octalEscape(), unicodeEscape()));
     }
 
-    Rule Escape() {
-        return Sequence('\\', FirstOf(AnyOf("btnfr\"\'\\"), OctalEscape(), UnicodeEscape()));
+    Rule octalEscape() {
+        return firstOf(sequence(charRange('0', '3'), charRange('0', '7'),
+            charRange('0', '7')),
+            sequence(charRange('0', '7'), charRange('0', '7')),
+            charRange('0', '7'));
     }
 
-    Rule OctalEscape() {
-        return FirstOf(
-                Sequence(CharRange('0', '3'), CharRange('0', '7'), CharRange('0', '7')),
-                Sequence(CharRange('0', '7'), CharRange('0', '7')),
-                CharRange('0', '7')
-        );
-    }
-
-    Rule UnicodeEscape() {
-        return Sequence(OneOrMore('u'), HexDigit(), HexDigit(), HexDigit(), HexDigit());
+    Rule unicodeEscape() {
+        return Sequence(oneOrMore('u'), hexDigit(), hexDigit(), hexDigit(), hexDigit());
     }
 
     //-------------------------------------------------------------------------
     //  JLS 3.11-12  Separators, Operators
     //-------------------------------------------------------------------------
 
-    final Rule AT = Terminal("@");
-    final Rule AND = Terminal("&", AnyOf("=&"));
-    final Rule ANDAND = Terminal("&&");
-    final Rule ANDEQU = Terminal("&=");
-    final Rule BANG = Terminal("!", Ch('='));
-    final Rule BSR = Terminal(">>>", Ch('='));
-    final Rule BSREQU = Terminal(">>>=");
-    final Rule COLON = Terminal(":");
-    final Rule COMMA = Terminal(",");
-    final Rule DEC = Terminal("--");
-    final Rule DIV = Terminal("/", Ch('='));
-    final Rule DIVEQU = Terminal("/=");
-    final Rule DOT = Terminal(".");
-    final Rule ELLIPSIS = Terminal("...");
-    final Rule EQU = Terminal("=", Ch('='));
-    final Rule EQUAL = Terminal("==");
-    final Rule GE = Terminal(">=");
-    final Rule GT = Terminal(">", AnyOf("=>"));
-    final Rule HAT = Terminal("^", Ch('='));
-    final Rule HATEQU = Terminal("^=");
-    final Rule INC = Terminal("++");
-    final Rule LBRK = Terminal("[");
-    final Rule LE = Terminal("<=");
-    final Rule LPAR = Terminal("(");
-    final Rule LPOINT = Terminal("<");
-    final Rule LT = Terminal("<", AnyOf("=<"));
-    final Rule LWING = Terminal("{");
-    final Rule MINUS = Terminal("-", AnyOf("=-"));
-    final Rule MINUSEQU = Terminal("-=");
-    final Rule MOD = Terminal("%", Ch('='));
-    final Rule MODEQU = Terminal("%=");
-    final Rule NOTEQUAL = Terminal("!=");
-    final Rule OR = Terminal("|", AnyOf("=|"));
-    final Rule OREQU = Terminal("|=");
-    final Rule OROR = Terminal("||");
-    final Rule PLUS = Terminal("+", AnyOf("=+"));
-    final Rule PLUSEQU = Terminal("+=");
-    final Rule QUERY = Terminal("?");
-    final Rule RBRK = Terminal("]");
-    final Rule RPAR = Terminal(")");
-    final Rule RPOINT = Terminal(">");
-    final Rule RWING = Terminal("}");
-    final Rule SEMI = Terminal(";");
-    final Rule SL = Terminal("<<", Ch('='));
-    final Rule SLEQU = Terminal("<<=");
-    final Rule SR = Terminal(">>", AnyOf("=>"));
-    final Rule SREQU = Terminal(">>=");
-    final Rule STAR = Terminal("*", Ch('='));
-    final Rule STAREQU = Terminal("*=");
-    final Rule TILDA = Terminal("~");
+    final Rule AT = terminal("@");
+    final Rule AND = terminal("&", anyOf("=&"));
+    final Rule ANDAND = terminal("&&");
+    final Rule ANDEQU = terminal("&=");
+    final Rule BANG = terminal("!", ch('='));
+    final Rule BSR = terminal(">>>", ch('='));
+    final Rule BSREQU = terminal(">>>=");
+    final Rule COLON = terminal(":");
+    final Rule COMMA = terminal(",");
+    final Rule DEC = terminal("--");
+    final Rule DIV = terminal("/", ch('='));
+    final Rule DIVEQU = terminal("/=");
+    final Rule DOT = terminal(".");
+    final Rule ELLIPSIS = terminal("...");
+    final Rule EQU = terminal("=", ch('='));
+    final Rule EQUAL = terminal("==");
+    final Rule GE = terminal(">=");
+    final Rule GT = terminal(">", anyOf("=>"));
+    final Rule HAT = terminal("^", ch('='));
+    final Rule HATEQU = terminal("^=");
+    final Rule INC = terminal("++");
+    final Rule LBRK = terminal("[");
+    final Rule LE = terminal("<=");
+    final Rule LPAR = terminal("(");
+    final Rule LPOINT = terminal("<");
+    final Rule LT = terminal("<", anyOf("=<"));
+    final Rule LWING = terminal("{");
+    final Rule MINUS = terminal("-", anyOf("=-"));
+    final Rule MINUSEQU = terminal("-=");
+    final Rule MOD = terminal("%", ch('='));
+    final Rule MODEQU = terminal("%=");
+    final Rule NOTEQUAL = terminal("!=");
+    final Rule OR = terminal("|", anyOf("=|"));
+    final Rule OREQU = terminal("|=");
+    final Rule OROR = terminal("||");
+    final Rule PLUS = terminal("+", anyOf("=+"));
+    final Rule PLUSEQU = terminal("+=");
+    final Rule QUERY = terminal("?");
+    final Rule RBRK = terminal("]");
+    final Rule RPAR = terminal(")");
+    final Rule RPOINT = terminal(">");
+    final Rule RWING = terminal("}");
+    final Rule SEMI = terminal(";");
+    final Rule SL = terminal("<<", ch('='));
+    final Rule SLEQU = terminal("<<=");
+    final Rule SR = terminal(">>", anyOf("=>"));
+    final Rule SREQU = terminal(">>=");
+    final Rule STAR = terminal("*", ch('='));
+    final Rule STAREQU = terminal("*=");
+    final Rule TILDA = terminal("~");
 
     //-------------------------------------------------------------------------
     //  helper methods
@@ -1128,14 +992,13 @@ public class JavaParser extends BaseParser<Object> {
 
     @SuppressNode
     @DontLabel
-    Rule Terminal(String string) {
-        return Sequence(string, Spacing()).label('\'' + string + '\'');
+    Rule terminal(String string) {
+        return sequence(string, spacing()).label('\'' + string + '\'');
     }
 
     @SuppressNode
     @DontLabel
-    Rule Terminal(String string, Rule mustNotFollow) {
-        return Sequence(string, TestNot(mustNotFollow), Spacing()).label('\'' + string + '\'');
+    Rule terminal(String string, Rule mustNotFollow) {
+        return sequence(string, testNot(mustNotFollow), spacing()).label('\'' + string + '\'');
     }
-
 }

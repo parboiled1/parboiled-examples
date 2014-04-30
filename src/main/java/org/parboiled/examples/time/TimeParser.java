@@ -26,61 +26,44 @@ import org.parboiled.annotations.BuildParseTree;
 @BuildParseTree
 public class TimeParser extends BaseParser<Object> {
 
-    public Rule Time() {
-        return FirstOf(Time_HH_MM_SS(), Time_HHMMSS(), Time_HMM());
+    public Rule time() {
+        return firstOf(timeHHMMSSWithColons(), timeHHMMSS(), timeHHM());
     }
 
     // h(h)?:mm(:ss)?
-    Rule Time_HH_MM_SS() {
-        return Sequence(
-                OneOrTwoDigits(), ':',
-                TwoDigits(),
-                FirstOf(Sequence(':', TwoDigits()), push(0)),
-                EOI,
-                swap3() && push(convertToTime(popAsInt(), popAsInt(), popAsInt()))
-        );
+    Rule timeHHMMSSWithColons() {
+        return sequence(oneOrTwoDigits(), ':', twoDigits(),
+            firstOf(sequence(':', twoDigits()), push(0)), EOI,
+            swap3() && push(convertToTime(popAsInt(), popAsInt(), popAsInt())));
     }
 
     // hh(mm(ss)?)?
-    Rule Time_HHMMSS() {
-        return Sequence(
-                TwoDigits(),
-                FirstOf(
-                        Sequence(
-                                TwoDigits(),
-                                FirstOf(TwoDigits(), push(0))
-                        ),
-                        pushAll(0, 0)
-                ),
-                EOI,
-                swap3() && push(convertToTime(popAsInt(), popAsInt(), popAsInt()))
+    Rule timeHHMMSS() {
+        return sequence(twoDigits(),
+            firstOf(sequence(twoDigits(), firstOf(twoDigits(), push(0))),
+                pushAll(0, 0)
+            ), EOI,
+            swap3() && push(convertToTime(popAsInt(), popAsInt(), popAsInt()))
         );
     }
 
     // h(mm)?
-    Rule Time_HMM() {
-        return Sequence(
-                OneDigit(),
-                FirstOf(TwoDigits(), push(0)),
-                EOI,
-                swap() && push(convertToTime(popAsInt(), popAsInt()))
-        );
+    Rule timeHHM() {
+        return sequence(oneDigit(), firstOf(twoDigits(), push(0)), EOI,
+            swap() && push(convertToTime(popAsInt(), popAsInt())));
     }
 
-    Rule OneOrTwoDigits() {
-        return FirstOf(TwoDigits(), OneDigit());
+    Rule oneOrTwoDigits() {
+        return firstOf(twoDigits(), oneDigit());
     }
 
-    Rule OneDigit() {
-        return Sequence(Digit(), push(Integer.parseInt(matchOrDefault("0"))));
+    Rule oneDigit() {
+        return sequence(digit(), push(Integer.parseInt(matchOrDefault("0"))));
     }
 
-    Rule TwoDigits() {
-        return Sequence(Sequence(Digit(), Digit()), push(Integer.parseInt(matchOrDefault("0"))));
-    }
-
-    Rule Digit() {
-        return CharRange('0', '9');
+    Rule twoDigits() {
+        return sequence(sequence(digit(), digit()),
+            push(Integer.parseInt(matchOrDefault("0"))));
     }
 
     // ************************* ACTIONS *****************************
@@ -99,5 +82,4 @@ public class TimeParser extends BaseParser<Object> {
                 minutes != null ? minutes : 0,
                 seconds != null ? seconds : 0);
     }
-
 }

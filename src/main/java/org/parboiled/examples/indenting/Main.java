@@ -14,7 +14,7 @@ public class Main {
         SimpleIndent parser = Parboiled.createParser(SimpleIndent.class);
         String input = "NodeA \n\tNodeB\n\tNodeC \n\t\tNodeD \nNodeE";
 
-        ParsingResult<?> result = new ReportingParseRunner(parser.Parent())
+        ParsingResult<?> result = new ReportingParseRunner(parser.parent())
                 .run(new IndentDedentInputBuffer(input.toCharArray(), 2, ";", true, true));
 
         if (!result.parseErrors.isEmpty()) {

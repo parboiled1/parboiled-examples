@@ -27,31 +27,27 @@ public class CalculatorParser0 extends CalculatorParser<Integer> {
 
     @Override
     public Rule inputLine() {
-        return Sequence(Expression(), EOI);
+        return sequence(expression(), EOI);
     }
 
-    Rule Expression() {
-        return Sequence(Term(), ZeroOrMore(AnyOf("+-"), Term()));
+    Rule expression() {
+        return sequence(term(), zeroOrMore(anyOf("+-"), term()));
     }
 
-    Rule Term() {
-        return Sequence(Factor(), ZeroOrMore(AnyOf("*/"), Factor()));
+    Rule term() {
+        return sequence(factor(), zeroOrMore(anyOf("*/"), factor()));
     }
 
-    Rule Factor() {
-        return FirstOf(Number(), Parens());
+    Rule factor() {
+        return firstOf(number(), parens());
     }
 
-    Rule Parens() {
-        return Sequence('(', Expression(), ')');
+    Rule parens() {
+        return sequence('(', expression(), ')');
     }
 
-    Rule Number() {
-        return OneOrMore(Digit());
-    }
-
-    Rule Digit() {
-        return CharRange('0', '9');
+    Rule number() {
+        return oneOrMore(digit());
     }
 
     //**************** MAIN ****************

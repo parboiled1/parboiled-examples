@@ -23,72 +23,60 @@ import org.parboiled.support.Var;
 
 /**
  * A calculator parser defining the same language as the CalculatorParser3 but using a rule building helper methods
- * to Factor out common constructs.
+ * to factor out common constructs.
  */
 @BuildParseTree
 public class CalculatorParser4 extends CalculatorParser<CalcNode> {
 
     @Override
     public Rule inputLine() {
-        return Sequence(Expression(), EOI);
+        return sequence(expression(), EOI);
     }
 
-    public Rule Expression() {
-        return OperatorRule(Term(), FirstOf("+ ", "- "));
+    public Rule expression() {
+        return operatorRule(term(), firstOf("+ ", "- "));
     }
 
-    public Rule Term() {
-        return OperatorRule(Factor(), FirstOf("* ", "/ "));
+    public Rule term() {
+        return operatorRule(factor(), firstOf("* ", "/ "));
     }
 
-    public Rule Factor() {
+    public Rule factor() {
         // by using toRule("^ ") instead of Ch('^') we make use of the fromCharLiteral(...) transformation below
-        return OperatorRule(Atom(), toRule("^ "));
+        return operatorRule(atom(), toRule("^ "));
     }
 
-    public Rule OperatorRule(Rule subRule, Rule operatorRule) {
+    public Rule operatorRule(Rule subRule, Rule operatorRule) {
         Var<Character> op = new Var<Character>();
-        return Sequence(
-                subRule,
-                ZeroOrMore(
-                        operatorRule, op.set(matchedChar()),
-                        subRule,
-                        push(new CalcNode(op.get(), pop(1), pop()))
-                )
+        return sequence(subRule,
+            zeroOrMore(operatorRule, op.set(matchedChar()), subRule,
+                push(new CalcNode(op.get(), pop(1), pop())))
         );
     }
 
-    public Rule Atom() {
-        return FirstOf(Number(), SquareRoot(), Parens());
+    public Rule atom() {
+        return firstOf(number(), squareRoot(), parens());
     }
 
-    public Rule SquareRoot() {
-        return Sequence("SQRT", Parens(), push(new CalcNode('R', pop(), null)));
+    public Rule squareRoot() {
+        return sequence("SQRT", parens(), push(new CalcNode('R', pop(), null)));
     }
 
-    public Rule Parens() {
-        return Sequence("( ", Expression(), ") ");
+    public Rule parens() {
+        return sequence("( ", expression(), ") ");
     }
 
-    public Rule Number() {
-        return Sequence(
-                Sequence(
-                        Optional(Ch('-')),
-                        OneOrMore(Digit()),
-                        Optional(Ch('.'), OneOrMore(Digit()))
-                ),
-                // the action uses a default string in case it is run during error recovery (resynchronization)
-                push(new CalcNode(Double.parseDouble(matchOrDefault("0")))),
-                WhiteSpace()
+    public Rule number() {
+        return sequence(sequence(optional(ch('-')), oneOrMore(digit()),
+                optional(ch('.'), oneOrMore(digit()))),
+            // the action uses a default string in case it is run during error recovery (resynchronization)
+            push(new CalcNode(Double.parseDouble(matchOrDefault("0")))),
+            whiteSpace()
         );
     }
 
-    public Rule Digit() {
-        return CharRange('0', '9');
-    }
-
-    public Rule WhiteSpace() {
-        return ZeroOrMore(AnyOf(" \t\f"));
+    public Rule whiteSpace() {
+        return zeroOrMore(anyOf(" \t\f"));
     }
 
     // we redefine the rule creation for string literals to automatically match trailing whitespace if the string
@@ -97,8 +85,8 @@ public class CalculatorParser4 extends CalculatorParser<CalcNode> {
     @Override
     protected Rule fromStringLiteral(String string) {
         return string.endsWith(" ") ?
-                Sequence(String(string.substring(0, string.length() - 1)), WhiteSpace()) :
-                String(string);
+                sequence(string(string.substring(0, string.length() - 1)), whiteSpace()) :
+                string(string);
     }
 
     //**************** MAIN ****************

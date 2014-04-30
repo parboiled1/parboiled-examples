@@ -32,167 +32,171 @@ import org.parboiled.Rule;
 @SuppressWarnings({"InfiniteRecursion"})
 public class SparqlParser extends BaseParser<Object> {
     // <Parser>
-    public Rule Query() {
-        return Sequence(WS(), Prologue(), FirstOf(SelectQuery(),
-                ConstructQuery(), DescribeQuery(), AskQuery()), EOI);
+    public Rule query() {
+        return sequence(whitespace(), prologue(),
+            firstOf(selectQuery(), constructQuery(), describeQuery(),
+                askQuery()), EOI);
     }
 
-    public Rule Prologue() {
-        return Sequence(Optional(BaseDecl()), ZeroOrMore(PrefixDecl()));
+    public Rule prologue() {
+        return sequence(optional(baseDecl()), zeroOrMore(prefixDecl()));
     }
 
-    public Rule BaseDecl() {
-        return Sequence(BASE(), IRI_REF());
+    public Rule baseDecl() {
+        return sequence(base(), iriRef());
     }
 
-    public Rule PrefixDecl() {
-        return Sequence(PREFIX(), PNAME_NS(), IRI_REF());
+    public Rule prefixDecl() {
+        return sequence(prefix(), pnameNs(), iriRef());
     }
 
-    public Rule SelectQuery() {
-        return Sequence(SELECT(), Optional(FirstOf(DISTINCT(),
-                REDUCED())), FirstOf(OneOrMore(Var()), ASTERISK()),
-                ZeroOrMore(DatasetClause()), WhereClause(), SolutionModifier());
+    public Rule selectQuery() {
+        return sequence(select(), optional(firstOf(distinct(), reduced())),
+            firstOf(oneOrMore(var()), asterisk()), zeroOrMore(datasetClause()),
+            whereClause(), solutionModifier()
+        );
     }
 
-    public Rule ConstructQuery() {
-        return Sequence(CONSTRUCT(), ConstructTemplate(),
-                ZeroOrMore(DatasetClause()), WhereClause(), SolutionModifier());
+    public Rule constructQuery() {
+        return sequence(construct(), constructTemplate(),
+            zeroOrMore(datasetClause()), whereClause(), solutionModifier());
     }
 
-    public Rule DescribeQuery() {
-        return Sequence(DESCRIBE(), FirstOf(OneOrMore(VarOrIRIref()),
-                ASTERISK()), ZeroOrMore(DatasetClause()),
-                Optional(WhereClause()), SolutionModifier());
+    public Rule describeQuery() {
+        return sequence(describe(),
+            firstOf(oneOrMore(varOrIRIref()), asterisk()),
+            zeroOrMore(datasetClause()), optional(whereClause()),
+            solutionModifier()
+        );
     }
 
-    public Rule AskQuery() {
-        return Sequence(ASK(), ZeroOrMore(DatasetClause()), WhereClause());
+    public Rule askQuery() {
+        return sequence(ask(), zeroOrMore(datasetClause()), whereClause());
     }
 
-    public Rule DatasetClause() {
-        return Sequence(FROM(), FirstOf(DefaultGraphClause(),
-                NamedGraphClause()));
+    public Rule datasetClause() {
+        return sequence(from(),
+            firstOf(defaultGraphClause(), namedGraphClause()));
     }
 
-    public Rule DefaultGraphClause() {
-        return SourceSelector();
+    public Rule defaultGraphClause() {
+        return sourceSelector();
     }
 
-    public Rule NamedGraphClause() {
-        return Sequence(NAMED(), SourceSelector());
+    public Rule namedGraphClause() {
+        return sequence(named(), sourceSelector());
     }
 
-    public Rule SourceSelector() {
-        return IriRef();
+    public Rule sourceSelector() {
+        return iriReference();
     }
 
-    public Rule WhereClause() {
-        return Sequence(Optional(WHERE()), GroupGraphPattern());
+    public Rule whereClause() {
+        return sequence(optional(where()), groupGraphPattern());
     }
 
-    public Rule SolutionModifier() {
-        return Sequence(Optional(OrderClause()), Optional(LimitOffsetClauses()));
+    public Rule solutionModifier() {
+        return sequence(optional(OrderClause()), optional(LimitOffsetClauses()));
     }
 
     public Rule LimitOffsetClauses() {
-        return FirstOf(Sequence(LimitClause(), Optional(OffsetClause())),
-                Sequence(OffsetClause(), Optional(LimitClause())));
+        return firstOf(sequence(LimitClause(), optional(OffsetClause())),
+                sequence(OffsetClause(), optional(LimitClause())));
     }
 
     public Rule OrderClause() {
-        return Sequence(ORDER(), BY(), OneOrMore(OrderCondition()));
+        return sequence(order(), by(), oneOrMore(OrderCondition()));
     }
 
     public Rule OrderCondition() {
-        return FirstOf(
-                Sequence(FirstOf(ASC(), DESC()), BrackettedExpression()),
-                FirstOf(Constraint(), Var()));
+        return firstOf(
+                sequence(firstOf(asc(), desc()), bracketedExpression()),
+                firstOf(Constraint(), var()));
     }
 
     public Rule LimitClause() {
-        return Sequence(LIMIT(), INTEGER());
+        return sequence(limit(), integer());
     }
 
     public Rule OffsetClause() {
-        return Sequence(OFFSET(), INTEGER());
+        return sequence(offset(), integer());
     }
 
-    public Rule GroupGraphPattern() {
-        return Sequence(OPEN_CURLY_BRACE(), Optional(TriplesBlock()),
-                ZeroOrMore(Sequence(
-                        FirstOf(GraphPatternNotTriples(), Filter()),
-                        Optional(DOT()), Optional(TriplesBlock()))),
-                CLOSE_CURLY_BRACE());
+    public Rule groupGraphPattern() {
+        return sequence(openingCurlyBrace(), optional(TriplesBlock()),
+            zeroOrMore(sequence(firstOf(GraphPatternNotTriples(), Filter()),
+                optional(dot()), optional(TriplesBlock()))), closingCurlyBrace()
+        );
     }
 
     public Rule TriplesBlock() {
-        return Sequence(TriplesSameSubject(), Optional(Sequence(DOT(),
-                Optional(TriplesBlock()))));
+        return sequence(TriplesSameSubject(),
+            optional(sequence(dot(), optional(TriplesBlock()))));
     }
 
     public Rule GraphPatternNotTriples() {
-        return FirstOf(OptionalGraphPattern(), GroupOrUnionGraphPattern(),
+        return firstOf(OptionalGraphPattern(), GroupOrUnionGraphPattern(),
                 GraphGraphPattern());
     }
 
     public Rule OptionalGraphPattern() {
-        return Sequence(OPTIONAL(), GroupGraphPattern());
+        return sequence(_optional(), groupGraphPattern());
     }
 
     public Rule GraphGraphPattern() {
-        return Sequence(GRAPH(), VarOrIRIref(), GroupGraphPattern());
+        return sequence(graph(), varOrIRIref(), groupGraphPattern());
     }
 
     public Rule GroupOrUnionGraphPattern() {
-        return Sequence(GroupGraphPattern(), ZeroOrMore(Sequence(UNION(),
-                GroupGraphPattern())));
+        return sequence(groupGraphPattern(),
+            zeroOrMore(sequence(union(), groupGraphPattern())));
     }
 
     public Rule Filter() {
-        return Sequence(FILTER(), Constraint());
+        return sequence(filter(), Constraint());
     }
 
     public Rule Constraint() {
-        return FirstOf(BrackettedExpression(), BuiltInCall(), FunctionCall());
+        return firstOf(bracketedExpression(), builtinCall(), FunctionCall());
     }
 
     public Rule FunctionCall() {
-        return Sequence(IriRef(), ArgList());
+        return sequence(iriReference(), ArgList());
     }
 
     public Rule ArgList() {
-        return FirstOf(Sequence(OPEN_BRACE(), CLOSE_BRACE()), Sequence(
-                OPEN_BRACE(), Expression(), ZeroOrMore(Sequence(COMMA(),
-                        Expression())), CLOSE_BRACE()));
+        return firstOf(sequence(openingParen(), closingParen()), sequence(
+            openingParen(), expression(),
+            zeroOrMore(sequence(comma(), expression())), closingParen()
+        ));
     }
 
-    public Rule ConstructTemplate() {
-        return Sequence(OPEN_CURLY_BRACE(), Optional(ConstructTriples()),
-                CLOSE_CURLY_BRACE());
+    public Rule constructTemplate() {
+        return sequence(openingCurlyBrace(), optional(ConstructTriples()),
+            closingCurlyBrace());
     }
 
     public Rule ConstructTriples() {
-        return Sequence(TriplesSameSubject(), Optional(Sequence(DOT(),
-                Optional(ConstructTriples()))));
+        return sequence(TriplesSameSubject(),
+            optional(sequence(dot(), optional(ConstructTriples()))));
     }
 
     public Rule TriplesSameSubject() {
-        return FirstOf(Sequence(VarOrTerm(), PropertyListNotEmpty()), Sequence(
-                TriplesNode(), PropertyList()));
+        return firstOf(sequence(VarOrTerm(), PropertyListNotEmpty()), sequence(
+            TriplesNode(), PropertyList()));
     }
 
     public Rule PropertyListNotEmpty() {
-        return Sequence(Verb(), ObjectList(), ZeroOrMore(Sequence(SEMICOLON(),
-                Optional(Sequence(Verb(), ObjectList())))));
+        return sequence(Verb(), ObjectList(), zeroOrMore(
+            sequence(semicolon(), optional(sequence(Verb(), ObjectList())))));
     }
 
     public Rule PropertyList() {
-        return Optional(PropertyListNotEmpty());
+        return optional(PropertyListNotEmpty());
     }
 
     public Rule ObjectList() {
-        return Sequence(Object_(), ZeroOrMore(Sequence(COMMA(), Object_())));
+        return sequence(Object_(), zeroOrMore(sequence(comma(), Object_())));
     }
 
     public Rule Object_() {
@@ -200,597 +204,607 @@ public class SparqlParser extends BaseParser<Object> {
     }
 
     public Rule Verb() {
-        return FirstOf(VarOrIRIref(), A());
+        return firstOf(varOrIRIref(), A());
     }
 
     public Rule TriplesNode() {
-        return FirstOf(Collection(), BlankNodePropertyList());
+        return firstOf(Collection(), BlankNodePropertyList());
     }
 
     public Rule BlankNodePropertyList() {
-        return Sequence(OPEN_SQUARE_BRACE(), PropertyListNotEmpty(),
-                CLOSE_SQUARE_BRACE());
+        return sequence(openingBracket(), PropertyListNotEmpty(),
+            closingBracket());
     }
 
     public Rule Collection() {
-        return Sequence(OPEN_BRACE(), OneOrMore(GraphNode()), CLOSE_BRACE());
+        return sequence(openingParen(), oneOrMore(GraphNode()), closingParen());
     }
 
     public Rule GraphNode() {
-        return FirstOf(VarOrTerm(), TriplesNode());
+        return firstOf(VarOrTerm(), TriplesNode());
     }
 
     public Rule VarOrTerm() {
-        return FirstOf(Var(), GraphTerm());
+        return firstOf(var(), GraphTerm());
     }
 
-    public Rule VarOrIRIref() {
-        return FirstOf(Var(), IriRef());
+    public Rule varOrIRIref() {
+        return firstOf(var(), iriReference());
     }
 
-    public Rule Var() {
-        return FirstOf(VAR1(), VAR2());
+    public Rule var() {
+        return firstOf(var1(), var2());
     }
 
     public Rule GraphTerm() {
-        return FirstOf(IriRef(), RdfLiteral(), NumericLiteral(),
-                BooleanLiteral(), BlankNode(), Sequence(OPEN_BRACE(),
-                        CLOSE_BRACE()));
+        return firstOf(iriReference(), rdfLiteral(), numericLiteral(),
+                booleanLiteral(), blankNode(), sequence(openingParen(),
+                closingParen()));
     }
 
-    public Rule Expression() {
-        return ConditionalOrExpression();
+    public Rule expression() {
+        return conditionalOrExpression();
     }
 
-    public Rule ConditionalOrExpression() {
-        return Sequence(ConditionalAndExpression(), ZeroOrMore(Sequence(OR(),
-                ConditionalAndExpression())));
+    public Rule conditionalOrExpression() {
+        return sequence(conditionalAndExpression(),
+            zeroOrMore(sequence(or(), conditionalAndExpression())));
     }
 
-    public Rule ConditionalAndExpression() {
-        return Sequence(ValueLogical(), ZeroOrMore(Sequence(AND(),
-                ValueLogical())));
+    public Rule conditionalAndExpression() {
+        return sequence(valueLogical(),
+            zeroOrMore(sequence(and(), valueLogical())));
     }
 
-    public Rule ValueLogical() {
-        return RelationalExpression();
+    public Rule valueLogical() {
+        return relationalExpression();
     }
 
-    public Rule RelationalExpression() {
-        return Sequence(NumericExpression(), Optional(FirstOf(//
-                Sequence(EQUAL(), NumericExpression()), //
-                Sequence(NOT_EQUAL(), NumericExpression()), //
-                Sequence(LESS(), NumericExpression()), //
-                Sequence(GREATER(), NumericExpression()), //
-                Sequence(LESS_EQUAL(), NumericExpression()), //
-                Sequence(GREATER_EQUAL(), NumericExpression()) //
+    public Rule relationalExpression() {
+        return sequence(numericExpression(), optional(firstOf(//
+            sequence(equal(), numericExpression()), //
+            sequence(notEqual(), numericExpression()), //
+            sequence(less(), numericExpression()), //
+            sequence(greater(), numericExpression()), //
+            sequence(lessOrEqual(), numericExpression()), //
+            sequence(greaterOrEqual(), numericExpression()) //
         ) //
         ));
     }
 
-    public Rule NumericExpression() {
-        return AdditiveExpression();
+    public Rule numericExpression() {
+        return additiveExpression();
     }
 
-    public Rule AdditiveExpression() {
-        return Sequence(MultiplicativeExpression(), //
-                ZeroOrMore(FirstOf(
-                        Sequence(PLUS(), MultiplicativeExpression()), //
-                        Sequence(MINUS(), MultiplicativeExpression()), //
-                        NumericLiteralPositive(), NumericLiteralNegative()) //
-                ));
+    public Rule additiveExpression() {
+        return sequence(multiplicativeExpression(), //
+            zeroOrMore(firstOf(sequence(plus(), multiplicativeExpression()), //
+                sequence(minus(), multiplicativeExpression()), //
+                numericLiteralPositive(), numericLiteralNegative()) //
+            )
+        );
     }
 
-    public Rule MultiplicativeExpression() {
-        return Sequence(UnaryExpression(), ZeroOrMore(FirstOf(Sequence(
-                ASTERISK(), UnaryExpression()), Sequence(DIVIDE(),
-                UnaryExpression()))));
+    public Rule multiplicativeExpression() {
+        return sequence(unaryExpression(), zeroOrMore(
+            firstOf(sequence(asterisk(), unaryExpression()),
+                sequence(divide(), unaryExpression()))));
     }
 
-    public Rule UnaryExpression() {
-        return FirstOf(Sequence(NOT(), PrimaryExpression()), Sequence(PLUS(),
-                PrimaryExpression()), Sequence(MINUS(), PrimaryExpression()),
-                PrimaryExpression());
+    public Rule unaryExpression() {
+        return firstOf(sequence(not(), primaryExpression()), sequence(plus(),
+                primaryExpression()), sequence(minus(), primaryExpression()),
+                primaryExpression());
     }
 
-    public Rule PrimaryExpression() {
-        return FirstOf(BrackettedExpression(), BuiltInCall(),
-                IriRefOrFunction(), RdfLiteral(), NumericLiteral(),
-                BooleanLiteral(), Var());
+    public Rule primaryExpression() {
+        return firstOf(bracketedExpression(), builtinCall(),
+                iriRefOrFunction(), rdfLiteral(), numericLiteral(),
+                booleanLiteral(), var());
     }
 
-    public Rule BrackettedExpression() {
-        return Sequence(OPEN_BRACE(), Expression(), CLOSE_BRACE());
+    public Rule bracketedExpression() {
+        return sequence(openingParen(), expression(), closingParen());
     }
 
-    public Rule BuiltInCall() {
-        return FirstOf(
-                Sequence(STR(), OPEN_BRACE(), Expression(), CLOSE_BRACE()),
-                Sequence(LANG(), OPEN_BRACE(), Expression(), CLOSE_BRACE()),
-                Sequence(LANGMATCHES(), OPEN_BRACE(), Expression(), COMMA(),
-                        Expression(), CLOSE_BRACE()),
-                Sequence(DATATYPE(), OPEN_BRACE(), Expression(), CLOSE_BRACE()),
-                Sequence(BOUND(), OPEN_BRACE(), Var(), CLOSE_BRACE()),
-                Sequence(SAMETERM(), OPEN_BRACE(), Expression(), COMMA(),
-                        Expression(), CLOSE_BRACE()),
-                Sequence(ISIRI(), OPEN_BRACE(), Expression(), CLOSE_BRACE()),
-                Sequence(ISURI(), OPEN_BRACE(), Expression(), CLOSE_BRACE()),
-                Sequence(ISBLANK(), OPEN_BRACE(), Expression(), CLOSE_BRACE()),
-                Sequence(ISLITERAL(), OPEN_BRACE(), Expression(), CLOSE_BRACE()),
+    public Rule builtinCall() {
+        return firstOf(
+                sequence(str(), openingParen(), expression(), closingParen()),
+                sequence(lang(), openingParen(), expression(), closingParen()),
+                sequence(langMatches(), openingParen(), expression(), comma(),
+                    expression(), closingParen()),
+                sequence(dataType(), openingParen(), expression(), closingParen()),
+                sequence(bound(), openingParen(), var(), closingParen()),
+                sequence(sameTerm(), openingParen(), expression(), comma(),
+                    expression(), closingParen()),
+                sequence(isIri(), openingParen(), expression(), closingParen()),
+                sequence(isUri(), openingParen(), expression(), closingParen()),
+                sequence(isBlank(), openingParen(), expression(), closingParen()),
+                sequence(isLiteral(), openingParen(), expression(), closingParen()),
                 RegexExpression());
     }
 
     public Rule RegexExpression() {
-        return Sequence(REGEX(), OPEN_BRACE(), Expression(), COMMA(),
-                Expression(), Optional(Sequence(COMMA(), Expression())),
-                CLOSE_BRACE());
+        return sequence(regex(), openingParen(), expression(), comma(),
+            expression(), optional(sequence(comma(), expression())),
+            closingParen());
     }
 
-    public Rule IriRefOrFunction() {
-        return Sequence(IriRef(), Optional(ArgList()));
+    public Rule iriRefOrFunction() {
+        return sequence(iriReference(), optional(ArgList()));
     }
 
-    public Rule RdfLiteral() {
-        return Sequence(String(), Optional(FirstOf(LANGTAG(), Sequence(
-                REFERENCE(), IriRef()))));
+    public Rule rdfLiteral() {
+        return sequence(string(),
+            optional(firstOf(langTag(), sequence(reference(), iriReference()))));
     }
 
-    public Rule NumericLiteral() {
-        return FirstOf(NumericLiteralUnsigned(), NumericLiteralPositive(),
-                NumericLiteralNegative());
+    public Rule numericLiteral() {
+        return firstOf(numericLiteralUnsigned(), numericLiteralPositive(),
+                numericLiteralNegative());
     }
 
-    public Rule NumericLiteralUnsigned() {
-        return FirstOf(DOUBLE(), DECIMAL(), INTEGER());
+    public Rule numericLiteralUnsigned() {
+        return firstOf(doubleLiteral(), decimal(), integer());
     }
 
-    public Rule NumericLiteralPositive() {
-        return FirstOf(DOUBLE_POSITIVE(), DECIMAL_POSITIVE(),
-                INTEGER_POSITIVE());
+    public Rule numericLiteralPositive() {
+        return firstOf(positiveDouble(), positiveDecimal(),
+                positiveInteger());
     }
 
-    public Rule NumericLiteralNegative() {
-        return FirstOf(DOUBLE_NEGATIVE(), DECIMAL_NEGATIVE(),
-                INTEGER_NEGATIVE());
+    public Rule numericLiteralNegative() {
+        return firstOf(negativeDouble(), negativeDecimal(),
+                negativeInteger());
     }
 
-    public Rule BooleanLiteral() {
-        return FirstOf(TRUE(), FALSE());
+    public Rule booleanLiteral() {
+        return firstOf(booleanTrue(), booleanFalse());
     }
 
-    public Rule String() {
-        return FirstOf(STRING_LITERAL_LONG1(), STRING_LITERAL1(),
-                STRING_LITERAL_LONG2(), STRING_LITERAL2());
+    public Rule string() {
+        return firstOf(stringLiteralLong1(), stringLiteral1(),
+                stringLiteralLong2(), stringLiteral2());
     }
 
-    public Rule IriRef() {
-        return FirstOf(IRI_REF(), PrefixedName());
+    public Rule iriReference() {
+        return firstOf(iriRef(), prefixedName());
     }
 
-    public Rule PrefixedName() {
-        return FirstOf(PNAME_LN(), PNAME_NS());
+    public Rule prefixedName() {
+        return firstOf(pnameLn(), pnameNs());
     }
 
-    public Rule BlankNode() {
-        return FirstOf(BLANK_NODE_LABEL(), Sequence(OPEN_SQUARE_BRACE(),
-                CLOSE_SQUARE_BRACE()));
+    public Rule blankNode() {
+        return firstOf(blankNodeLabel(), sequence(openingBracket(),
+            closingBracket()));
     }
     // </Parser>
 
     // <Lexer>
 
-    public Rule WS() {
-        return ZeroOrMore(FirstOf(COMMENT(), WS_NO_COMMENT()));
+    public Rule whitespace() {
+        return zeroOrMore(firstOf(comment(), wsNoComment()));
     }
 
-    public Rule WS_NO_COMMENT() {
-        return FirstOf(Ch(' '), Ch('\t'), Ch('\f'), EOL());
+    public Rule wsNoComment() {
+        return firstOf(ch(' '), ch('\t'), ch('\f'), eol());
     }
 
-    public Rule PNAME_NS() {
-        return Sequence(Optional(PN_PREFIX()), ChWS(':'));
+    public Rule pnameNs() {
+        return sequence(optional(pnPrefix()), chws(':'));
     }
 
-    public Rule PNAME_LN() {
-        return Sequence(PNAME_NS(), PN_LOCAL());
+    public Rule pnameLn() {
+        return sequence(pnameNs(), pnLocal());
     }
 
-    public Rule BASE() {
-        return StringIgnoreCaseWS("BASE");
+    public Rule base() {
+        return stringIgnoreCaseWS("BASE");
     }
 
-    public Rule PREFIX() {
-        return StringIgnoreCaseWS("PREFIX");
+    public Rule prefix() {
+        return stringIgnoreCaseWS("PREFIX");
     }
 
-    public Rule SELECT() {
-        return StringIgnoreCaseWS("SELECT");
+    public Rule select() {
+        return stringIgnoreCaseWS("SELECT");
     }
 
-    public Rule DISTINCT() {
-        return StringIgnoreCaseWS("DISTINCT");
+    public Rule distinct() {
+        return stringIgnoreCaseWS("DISTINCT");
     }
 
-    public Rule REDUCED() {
-        return StringIgnoreCaseWS("REDUCED");
+    public Rule reduced() {
+        return stringIgnoreCaseWS("REDUCED");
     }
 
-    public Rule CONSTRUCT() {
-        return StringIgnoreCaseWS("CONSTRUCT");
+    public Rule construct() {
+        return stringIgnoreCaseWS("CONSTRUCT");
     }
 
-    public Rule DESCRIBE() {
-        return StringIgnoreCaseWS("DESCRIBE");
+    public Rule describe() {
+        return stringIgnoreCaseWS("DESCRIBE");
     }
 
-    public Rule ASK() {
-        return StringIgnoreCaseWS("ASK");
+    public Rule ask() {
+        return stringIgnoreCaseWS("ASK");
     }
 
-    public Rule FROM() {
-        return StringIgnoreCaseWS("FROM");
+    public Rule from() {
+        return stringIgnoreCaseWS("FROM");
     }
 
-    public Rule NAMED() {
-        return StringIgnoreCaseWS("NAMED");
+    public Rule named() {
+        return stringIgnoreCaseWS("NAMED");
     }
 
-    public Rule WHERE() {
-        return StringIgnoreCaseWS("WHERE");
+    public Rule where() {
+        return stringIgnoreCaseWS("WHERE");
     }
 
-    public Rule ORDER() {
-        return StringIgnoreCaseWS("ORDER");
+    public Rule order() {
+        return stringIgnoreCaseWS("ORDER");
     }
 
-    public Rule BY() {
-        return StringIgnoreCaseWS("BY");
+    public Rule by() {
+        return stringIgnoreCaseWS("BY");
     }
 
-    public Rule ASC() {
-        return StringIgnoreCaseWS("ASC");
+    public Rule asc() {
+        return stringIgnoreCaseWS("ASC");
     }
 
-    public Rule DESC() {
-        return StringIgnoreCaseWS("DESC");
+    public Rule desc() {
+        return stringIgnoreCaseWS("DESC");
     }
 
-    public Rule LIMIT() {
-        return StringIgnoreCaseWS("LIMIT");
+    public Rule limit() {
+        return stringIgnoreCaseWS("LIMIT");
     }
 
-    public Rule OFFSET() {
-        return StringIgnoreCaseWS("OFFSET");
+    public Rule offset() {
+        return stringIgnoreCaseWS("OFFSET");
     }
 
-    public Rule OPTIONAL() {
-        return StringIgnoreCaseWS("OPTIONAL");
+    public Rule _optional() {
+        return stringIgnoreCaseWS("OPTIONAL");
     }
 
-    public Rule GRAPH() {
-        return StringIgnoreCaseWS("GRAPH");
+    public Rule graph() {
+        return stringIgnoreCaseWS("graph");
     }
 
-    public Rule UNION() {
-        return StringIgnoreCaseWS("UNION");
+    public Rule union() {
+        return stringIgnoreCaseWS("UNION");
     }
 
-    public Rule FILTER() {
-        return StringIgnoreCaseWS("FILTER");
+    public Rule filter() {
+        return stringIgnoreCaseWS("FILTER");
     }
 
     public Rule A() {
-        return ChWS('a');
+        return chws('a');
     }
 
-    public Rule STR() {
-        return StringIgnoreCaseWS("STR");
+    public Rule str() {
+        return stringIgnoreCaseWS("STR");
     }
 
-    public Rule LANG() {
-        return StringIgnoreCaseWS("LANG");
+    public Rule lang() {
+        return stringIgnoreCaseWS("LANG");
     }
 
-    public Rule LANGMATCHES() {
-        return StringIgnoreCaseWS("LANGMATCHES");
+    public Rule langMatches() {
+        return stringIgnoreCaseWS("LANGMATCHES");
     }
 
-    public Rule DATATYPE() {
-        return StringIgnoreCaseWS("DATATYPE");
+    public Rule dataType() {
+        return stringIgnoreCaseWS("DATATYPE");
     }
 
-    public Rule BOUND() {
-        return StringIgnoreCaseWS("BOUND");
+    public Rule bound() {
+        return stringIgnoreCaseWS("BOUND");
     }
 
-    public Rule SAMETERM() {
-        return StringIgnoreCaseWS("SAMETERM");
+    public Rule sameTerm() {
+        return stringIgnoreCaseWS("SAMETERM");
     }
 
-    public Rule ISIRI() {
-        return StringIgnoreCaseWS("ISIRI");
+    public Rule isIri() {
+        return stringIgnoreCaseWS("ISIRI");
     }
 
-    public Rule ISURI() {
-        return StringIgnoreCaseWS("ISURI");
+    public Rule isUri() {
+        return stringIgnoreCaseWS("ISURI");
     }
 
-    public Rule ISBLANK() {
-        return StringIgnoreCaseWS("ISBLANK");
+    public Rule isBlank() {
+        return stringIgnoreCaseWS("ISBLANK");
     }
 
-    public Rule ISLITERAL() {
-        return StringIgnoreCaseWS("ISLITERAL");
+    public Rule isLiteral() {
+        return stringIgnoreCaseWS("ISLITERAL");
     }
 
-    public Rule REGEX() {
-        return StringIgnoreCaseWS("REGEX");
+    public Rule regex() {
+        return stringIgnoreCaseWS("REGEX");
     }
 
-    public Rule TRUE() {
-        return StringIgnoreCaseWS("TRUE");
+    public Rule booleanTrue() {
+        return stringIgnoreCaseWS("TRUE");
     }
 
-    public Rule FALSE() {
-        return StringIgnoreCaseWS("FALSE");
+    public Rule booleanFalse() {
+        return stringIgnoreCaseWS("FALSE");
     }
 
-    public Rule IRI_REF() {
-        return Sequence(LESS_NO_COMMENT(), //
-                ZeroOrMore(Sequence(TestNot(FirstOf(LESS_NO_COMMENT(), GREATER(), '"', OPEN_CURLY_BRACE(),
-                        CLOSE_CURLY_BRACE(), '|', '^', '\\', '`', CharRange('\u0000', '\u0020'))), ANY)), //
-                GREATER());
-    }
-
-    public Rule BLANK_NODE_LABEL() {
-        return Sequence("_:", PN_LOCAL(), WS());
-    }
-
-    public Rule VAR1() {
-        return Sequence('?', VARNAME(), WS());
-    }
-
-    public Rule VAR2() {
-        return Sequence('$', VARNAME(), WS());
-    }
-
-    public Rule LANGTAG() {
-        return Sequence('@', OneOrMore(PN_CHARS_BASE()), ZeroOrMore(Sequence(
-                MINUS(), OneOrMore(Sequence(PN_CHARS_BASE(), DIGIT())))), WS());
-    }
-
-    public Rule INTEGER() {
-        return Sequence(OneOrMore(DIGIT()), WS());
-    }
-
-    public Rule DECIMAL() {
-        return Sequence(FirstOf( //
-                Sequence(OneOrMore(DIGIT()), DOT(), ZeroOrMore(DIGIT())), //
-                Sequence(DOT(), OneOrMore(DIGIT())) //
-        ), WS());
-    }
-
-    public Rule DOUBLE() {
-        return Sequence(FirstOf(//
-                Sequence(OneOrMore(DIGIT()), DOT(), ZeroOrMore(DIGIT()),
-                        EXPONENT()), //
-                Sequence(DOT(), OneOrMore(DIGIT()), EXPONENT()), //
-                Sequence(OneOrMore(DIGIT()), EXPONENT())), WS());
-    }
-
-    public Rule INTEGER_POSITIVE() {
-        return Sequence(PLUS(), INTEGER());
-    }
-
-    public Rule DECIMAL_POSITIVE() {
-        return Sequence(PLUS(), DECIMAL());
-    }
-
-    public Rule DOUBLE_POSITIVE() {
-        return Sequence(PLUS(), DOUBLE());
-    }
-
-    public Rule INTEGER_NEGATIVE() {
-        return Sequence(MINUS(), INTEGER());
-    }
-
-    public Rule DECIMAL_NEGATIVE() {
-        return Sequence(MINUS(), DECIMAL());
-    }
-
-    public Rule DOUBLE_NEGATIVE() {
-        return Sequence(MINUS(), DOUBLE());
-    }
-
-    public Rule EXPONENT() {
-        return Sequence(IgnoreCase('e'), Optional(FirstOf(PLUS(), MINUS())),
-                OneOrMore(DIGIT()));
-    }
-
-    public Rule STRING_LITERAL1() {
-        return Sequence("'", ZeroOrMore(FirstOf(Sequence(TestNot(FirstOf("'",
-                '\\', '\n', '\r')), ANY), ECHAR())), "'", WS());
-    }
-
-    public Rule STRING_LITERAL2() {
-        return Sequence('"', ZeroOrMore(FirstOf(Sequence(TestNot(AnyOf("\"\\\n\r")), ANY), ECHAR())), '"', WS());
-    }
-
-    public Rule STRING_LITERAL_LONG1() {
-        return Sequence("'''", ZeroOrMore(Sequence(
-                Optional(FirstOf("''", "'")), FirstOf(Sequence(TestNot(FirstOf(
-                        "'", "\\")), ANY), ECHAR()))), "'''", WS());
-    }
-
-    public Rule STRING_LITERAL_LONG2() {
-        return Sequence("\"\"\"", ZeroOrMore(Sequence(Optional(FirstOf("\"\"", "\"")),
-                FirstOf(Sequence(TestNot(FirstOf("\"", "\\")), ANY), ECHAR()))), "\"\"\"", WS());
-    }
-
-    public Rule ECHAR() {
-        return Sequence('\\', AnyOf("tbnrf\\\"\'"));
-    }
-
-    public Rule PN_CHARS_U() {
-        return FirstOf(PN_CHARS_BASE(), '_');
-    }
-
-    public Rule VARNAME() {
-        return Sequence(FirstOf(PN_CHARS_U(), DIGIT()), ZeroOrMore(FirstOf(
-                PN_CHARS_U(), DIGIT(), '\u00B7', CharRange('\u0300', '\u036F'), CharRange('\u203F', '\u2040'))), WS());
-    }
-
-    public Rule PN_CHARS() {
-        return FirstOf(MINUS(), DIGIT(), PN_CHARS_U(), '\u00B7',
-                CharRange('\u0300', '\u036F'), CharRange('\u203F', '\u2040'));
-    }
-
-    public Rule PN_PREFIX() {
-        return Sequence(PN_CHARS_BASE(), Optional(ZeroOrMore(FirstOf(PN_CHARS(), Sequence(DOT(), PN_CHARS())))));
-    }
-
-    public Rule PN_LOCAL() {
-        return Sequence(FirstOf(PN_CHARS_U(), DIGIT()),
-                Optional(ZeroOrMore(FirstOf(PN_CHARS(), Sequence(DOT(), PN_CHARS())))), WS());
-    }
-
-    public Rule PN_CHARS_BASE() {
-        return FirstOf( //
-                CharRange('A', 'Z'),//
-                CharRange('a', 'z'), //
-                CharRange('\u00C0', '\u00D6'), //
-                CharRange('\u00D8', '\u00F6'), //
-                CharRange('\u00F8', '\u02FF'), //
-                CharRange('\u0370', '\u037D'), //
-                CharRange('\u037F', '\u1FFF'), //
-                CharRange('\u200C', '\u200D'), //
-                CharRange('\u2070', '\u218F'), //
-                CharRange('\u2C00', '\u2FEF'), //
-                CharRange('\u3001', '\uD7FF'), //
-                CharRange('\uF900', '\uFDCF'), //
-                CharRange('\uFDF0', '\uFFFD') //
+    public Rule iriRef() {
+        return sequence(lessNoComment(), //
+            zeroOrMore(sequence(testNot(
+                firstOf(lessNoComment(), greater(), '"', openingCurlyBrace(),
+                    closingCurlyBrace(), '|', '^', '\\', '`',
+                    charRange('\u0000', '\u0020'))
+            ), ANY)), //
+            greater()
         );
     }
 
-    public Rule DIGIT() {
-        return CharRange('0', '9');
+    public Rule blankNodeLabel() {
+        return sequence("_:", pnLocal(), whitespace());
     }
 
-    public Rule COMMENT() {
-        return Sequence('#', ZeroOrMore(Sequence(TestNot(EOL()), ANY)), EOL());
+    public Rule var1() {
+        return sequence('?', varName(), whitespace());
     }
 
-    public Rule EOL() {
-        return AnyOf("\n\r");
+    public Rule var2() {
+        return sequence('$', varName(), whitespace());
     }
 
-    public Rule REFERENCE() {
+    public Rule langTag() {
+        return sequence('@', oneOrMore(pnCharsBase()), zeroOrMore(
+            sequence(minus(), oneOrMore(sequence(pnCharsBase(), digit())))),
+            whitespace());
+    }
+
+    public Rule integer() {
+        return sequence(oneOrMore(digit()), whitespace());
+    }
+
+    public Rule decimal() {
+        return sequence(firstOf( //
+            sequence(oneOrMore(digit()), dot(), zeroOrMore(digit())), //
+            sequence(dot(), oneOrMore(digit())) //
+        ), whitespace());
+    }
+
+    public Rule doubleLiteral() {
+        return sequence(firstOf(//
+            sequence(oneOrMore(digit()), dot(), zeroOrMore(digit()),
+                exponent()), //
+            sequence(dot(), oneOrMore(digit()), exponent()), //
+            sequence(oneOrMore(digit()), exponent())
+        ), whitespace());
+    }
+
+    public Rule positiveInteger() {
+        return sequence(plus(), integer());
+    }
+
+    public Rule positiveDecimal() {
+        return sequence(plus(), decimal());
+    }
+
+    public Rule positiveDouble() {
+        return sequence(plus(), doubleLiteral());
+    }
+
+    public Rule negativeInteger() {
+        return sequence(minus(), integer());
+    }
+
+    public Rule negativeDecimal() {
+        return sequence(minus(), decimal());
+    }
+
+    public Rule negativeDouble() {
+        return sequence(minus(), doubleLiteral());
+    }
+
+    public Rule exponent() {
+        return sequence(ignoreCase('e'), optional(firstOf(plus(), minus())),
+            oneOrMore(digit()));
+    }
+
+    public Rule stringLiteral1() {
+        return sequence("'", zeroOrMore(
+            firstOf(sequence(testNot(firstOf("'", '\\', '\n', '\r')), ANY),
+                echar())), "'", whitespace());
+    }
+
+    public Rule stringLiteral2() {
+        return sequence('"', zeroOrMore(
+            firstOf(sequence(testNot(anyOf("\"\\\n\r")), ANY), echar())), '"',
+            whitespace());
+    }
+
+    public Rule stringLiteralLong1() {
+        return sequence("'''", zeroOrMore(sequence(optional(firstOf("''", "'")),
+            firstOf(sequence(testNot(firstOf("'", "\\")), ANY), echar())
+        )), "'''", whitespace());
+    }
+
+    public Rule stringLiteralLong2() {
+        return sequence("\"\"\"", zeroOrMore(
+            sequence(optional(firstOf("\"\"", "\"")),
+                firstOf(sequence(testNot(firstOf("\"", "\\")), ANY), echar()))),
+            "\"\"\"", whitespace());
+    }
+
+    public Rule echar() {
+        return sequence('\\', anyOf("tbnrf\\\"\'"));
+    }
+
+    public Rule pnCharsU() {
+        return firstOf(pnCharsBase(), '_');
+    }
+
+    public Rule varName() {
+        return sequence(firstOf(pnCharsU(), digit()), zeroOrMore(
+            firstOf(pnCharsU(), digit(), '\u00B7',
+                charRange('\u0300', '\u036F'), charRange('\u203F', '\u2040'))),
+            whitespace());
+    }
+
+    public Rule pnChars() {
+        return firstOf(minus(), digit(), pnCharsU(), '\u00B7',
+                charRange('\u0300', '\u036F'), charRange('\u203F', '\u2040'));
+    }
+
+    public Rule pnPrefix() {
+        return sequence(pnCharsBase(), optional(
+            zeroOrMore(firstOf(pnChars(), sequence(dot(), pnChars())))));
+    }
+
+    public Rule pnLocal() {
+        return sequence(firstOf(pnCharsU(), digit()), optional(
+                zeroOrMore(firstOf(pnChars(), sequence(dot(), pnChars())))),
+            whitespace());
+    }
+
+    public Rule pnCharsBase() {
+        return firstOf( //
+                alpha(),
+                charRange('\u00C0', '\u00D6'), //
+                charRange('\u00D8', '\u00F6'), //
+                charRange('\u00F8', '\u02FF'), //
+                charRange('\u0370', '\u037D'), //
+                charRange('\u037F', '\u1FFF'), //
+                charRange('\u200C', '\u200D'), //
+                charRange('\u2070', '\u218F'), //
+                charRange('\u2C00', '\u2FEF'), //
+                charRange('\u3001', '\uD7FF'), //
+                charRange('\uF900', '\uFDCF'), //
+                charRange('\uFDF0', '\uFFFD') //
+        );
+    }
+
+    public Rule comment() {
+        return sequence('#', zeroOrMore(sequence(testNot(eol()), ANY)), eol());
+    }
+
+    public Rule eol() {
+        return anyOf("\n\r");
+    }
+
+    public Rule reference() {
         return StringWS("^^");
     }
 
-    public Rule LESS_EQUAL() {
+    public Rule lessOrEqual() {
         return StringWS("<=");
     }
 
-    public Rule GREATER_EQUAL() {
+    public Rule greaterOrEqual() {
         return StringWS(">=");
     }
 
-    public Rule NOT_EQUAL() {
+    public Rule notEqual() {
         return StringWS("!=");
     }
 
-    public Rule AND() {
+    public Rule and() {
         return StringWS("&&");
     }
 
-    public Rule OR() {
+    public Rule or() {
         return StringWS("||");
     }
 
-    public Rule OPEN_BRACE() {
-        return ChWS('(');
+    public Rule openingParen() {
+        return chws('(');
     }
 
-    public Rule CLOSE_BRACE() {
-        return ChWS(')');
+    public Rule closingParen() {
+        return chws(')');
     }
 
-    public Rule OPEN_CURLY_BRACE() {
-        return ChWS('{');
+    public Rule openingCurlyBrace() {
+        return chws('{');
     }
 
-    public Rule CLOSE_CURLY_BRACE() {
-        return ChWS('}');
+    public Rule closingCurlyBrace() {
+        return chws('}');
     }
 
-    public Rule OPEN_SQUARE_BRACE() {
-        return ChWS('[');
+    public Rule openingBracket() {
+        return chws('[');
     }
 
-    public Rule CLOSE_SQUARE_BRACE() {
-        return ChWS(']');
+    public Rule closingBracket() {
+        return chws(']');
     }
 
-    public Rule SEMICOLON() {
-        return ChWS(';');
+    public Rule semicolon() {
+        return chws(';');
     }
 
-    public Rule DOT() {
-        return ChWS('.');
+    public Rule dot() {
+        return chws('.');
     }
 
-    public Rule PLUS() {
-        return ChWS('+');
+    public Rule plus() {
+        return chws('+');
     }
 
-    public Rule MINUS() {
-        return ChWS('-');
+    public Rule minus() {
+        return chws('-');
     }
 
-    public Rule ASTERISK() {
-        return ChWS('*');
+    public Rule asterisk() {
+        return chws('*');
     }
 
-    public Rule COMMA() {
-        return ChWS(',');
+    public Rule comma() {
+        return chws(',');
     }
 
-    public Rule NOT() {
-        return ChWS('!');
+    public Rule not() {
+        return chws('!');
     }
 
-    public Rule DIVIDE() {
-        return ChWS('/');
+    public Rule divide() {
+        return chws('/');
     }
 
-    public Rule EQUAL() {
-        return ChWS('=');
+    public Rule equal() {
+        return chws('=');
     }
 
-    public Rule LESS_NO_COMMENT() {
-        return Sequence(Ch('<'), ZeroOrMore(WS_NO_COMMENT()));
+    public Rule lessNoComment() {
+        return sequence(ch('<'), zeroOrMore(wsNoComment()));
     }
 
-    public Rule LESS() {
-        return ChWS('<');
+    public Rule less() {
+        return chws('<');
     }
 
-    public Rule GREATER() {
-        return ChWS('>');
+    public Rule greater() {
+        return chws('>');
     }
     // </Lexer>
 
-    public Rule ChWS(char c) {
-        return Sequence(Ch(c), WS());
+    public Rule chws(char c) {
+        return sequence(ch(c), whitespace());
     }
 
     public Rule StringWS(String s) {
-        return Sequence(String(s), WS());
+        return sequence(string(s), whitespace());
     }
 
-    public Rule StringIgnoreCaseWS(String string) {
-        return Sequence(IgnoreCase(string), WS());
+    public Rule stringIgnoreCaseWS(String string) {
+        return sequence(ignoreCase(string), whitespace());
     }
 
 }

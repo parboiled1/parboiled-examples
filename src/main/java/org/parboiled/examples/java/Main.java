@@ -16,17 +16,27 @@
 
 package org.parboiled.examples.java;
 
-import static org.parboiled.common.Preconditions.*;
 import org.parboiled.Parboiled;
-import org.parboiled.parserunners.ReportingParseRunner;
 import org.parboiled.Rule;
+import org.parboiled.parserunners.ReportingParseRunner;
 import org.parboiled.support.ParsingResult;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.parboiled.common.Preconditions.checkArgNotNull;
 import static org.parboiled.errors.ErrorUtils.printParseErrors;
 
 public class Main {
@@ -68,7 +78,7 @@ public class Main {
         time(start);
 
         System.out.printf("Parsing all %s given java sources", sources.size());
-        Rule rootRule = parser.CompilationUnit().suppressNode(); // we want to see the parse-tree-less performance
+        Rule rootRule = parser.compilationUnit().suppressNode(); // we want to see the parse-tree-less performance
         start = System.currentTimeMillis();
         long lines = 0, characters = 0;
         for (File sourceFile : sources) {

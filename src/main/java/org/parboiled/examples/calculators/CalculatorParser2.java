@@ -32,71 +32,57 @@ public class CalculatorParser2 extends CalculatorParser<CalcNode> {
 
     @Override
     public Rule inputLine() {
-        return Sequence(Expression(), EOI);
+        return sequence(expression(), EOI);
     }
 
-    public Rule Expression() {
+    public Rule expression() {
         Var<Character> op = new Var<Character>(); // we use an action variable to hold the operator character
-        return Sequence(
-                Term(),
-                ZeroOrMore(
-                        AnyOf("+-"),
-                        op.set(matchedChar()), // set the action variable to the matched operator char
-                        Term(),
+        return sequence(term(), zeroOrMore(anyOf("+-"), op.set(matchedChar()),
+                // set the action variable to the matched operator char
+                term(),
 
-                        // create an AST node for the operation that was just matched
-                        // we consume the two top stack elements and replace them with a new AST node
-                        // we use an alternative technique to the one shown in CalculatorParser1 to reverse
-                        // the order of the two top value stack elements
-                        swap() && push(new CalcNode(op.get(), pop(), pop()))
-                )
+                // create an AST node for the operation that was just matched
+                // we consume the two top stack elements and replace them with a new AST node
+                // we use an alternative technique to the one shown in CalculatorParser1 to reverse
+                // the order of the two top value stack elements
+                swap() && push(new CalcNode(op.get(), pop(), pop())))
         );
     }
 
-    public Rule Term() {
+    public Rule term() {
         Var<Character> op = new Var<Character>(); // we use an action variable to hold the operator character
-        return Sequence(
-                Factor(),
-                ZeroOrMore(
-                        AnyOf("*/"),
-                        op.set(matchedChar()), // set the action variable to the matched operator char
-                        Factor(),
+        return sequence(factor(), zeroOrMore(anyOf("*/"), op.set(matchedChar()),
+                // set the action variable to the matched operator char
+                factor(),
 
-                        // create an AST node for the operation that was just matched
-                        // we consume the two top stack elements and replace them with a new AST node
-                        // we use an alternative technique to the one shown in CalculatorParser1 to reverse
-                        // the order of the two top value stack elements
-                        swap() && push(new CalcNode(op.get(), pop(), pop()))
-                )
+                // create an AST node for the operation that was just matched
+                // we consume the two top stack elements and replace them with a new AST node
+                // we use an alternative technique to the one shown in CalculatorParser1 to reverse
+                // the order of the two top value stack elements
+                swap() && push(new CalcNode(op.get(), pop(), pop())))
         );
     }
 
-    public Rule Factor() {
-        return FirstOf(Number(), Parens());
+    public Rule factor() {
+        return firstOf(number(), parens());
     }
 
-    public Rule Parens() {
-        return Sequence('(', Expression(), ')');
+    public Rule parens() {
+        return sequence('(', expression(), ')');
     }
 
-    public Rule Number() {
-        return Sequence(
-                Digits(),
+    public Rule number() {
+        return sequence(digits(),
 
-                // parse the input text matched by the preceding "Digits" rule,
-                // convert it into an Integer and push a new AST node for it onto the value stack
-                // the action uses a default string in case it is run during error recovery (resynchronization)
-                push(new CalcNode(Integer.parseInt(matchOrDefault("0"))))
-        );
+            // parse the input text matched by the preceding "digits" rule,
+            // convert it into an Integer and push a new AST node for it onto the value stack
+            // the action uses a default string in case it is run during error recovery (resynchronization)
+            push(new CalcNode(Integer.parseInt(matchOrDefault("0")))));
     }
 
     @SuppressSubnodes
-    public Rule Digits() {
-        return OneOrMore(Digit());
-    }
-
-    public Rule Digit() {
-        return CharRange('0', '9');
+    public Rule digits() {
+        return oneOrMore(digit());
     }
 
     //****************************************************************

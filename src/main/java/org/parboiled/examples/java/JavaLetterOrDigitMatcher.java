@@ -19,7 +19,7 @@ package org.parboiled.examples.java;
 public class JavaLetterOrDigitMatcher extends AbstractJavaCharacterMatcher {
 
     public JavaLetterOrDigitMatcher() {
-        super("LetterOrDigit");
+        super("letterOrDigit");
     }
 
     @Override

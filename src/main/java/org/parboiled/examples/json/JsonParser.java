@@ -28,127 +28,118 @@ import java.util.Scanner;
 public class JsonParser
     extends BaseParser<Void>
 {
-    Rule SpecialEscape()
+    Rule specialEscape()
     {
-        return Sequence('\\', AnyOf("\"\\/bfnrt"));
+        return sequence('\\', anyOf("\"\\/bfnrt"));
     }
 
-    Rule UTF16Escape()
+    Rule utf16Escape()
     {
-        return Sequence(
-            "\\u",
-            NTimes(4, AnyOf("abcdefABCDEF0123456789").label("HexDigit"))
+        return sequence("\\u", nTimes(4, hexDigit()));
+    }
+
+    Rule stringSpecial()
+    {
+        return firstOf(specialEscape(), utf16Escape());
+    }
+
+    Rule stringNormal()
+    {
+        return zeroOrMore(noneOf("\"\\\b\f\n\r\t"));
+    }
+
+    Rule stringContent()
+    {
+        return join(stringNormal(), stringSpecial());
+    }
+
+    Rule jsonString()
+    {
+        return sequence('"', stringContent(), '"');
+    }
+
+    Rule jsonBoolean()
+    {
+        return firstOf("true", "false");
+    }
+
+    Rule jsonNull()
+    {
+        return string("null");
+    }
+
+    Rule digits()
+    {
+        return oneOrMore(digit());
+    }
+
+    Rule integer()
+    {
+        return firstOf(sequence(testNot('0'), digits()), '0');
+    }
+
+    Rule fraction()
+    {
+        return sequence('.', digits());
+    }
+
+    Rule exponent()
+    {
+        return sequence(anyOf("eE"), optional(anyOf("+-")), digits());
+    }
+
+    Rule jsonNumber()
+    {
+        return sequence(optional('-'), integer(), optional(fraction()),
+            optional(exponent()));
+    }
+
+    Rule jsonPrimitive()
+    {
+        return firstOf(jsonString(), jsonNumber(), jsonBoolean(), jsonNull());
+    }
+
+    Rule jsonArray()
+    {
+        return sequence('[', whiteSpace(), optional(
+                join(jsonValue(), sequence(whiteSpace(), ',', whiteSpace()))),
+            whiteSpace(), ']'
         );
     }
 
-    Rule StringSpecial()
+    Rule objectMember()
     {
-        return FirstOf(SpecialEscape(), UTF16Escape());
+        return sequence(jsonString(), whiteSpace(), ':', whiteSpace(),
+            jsonValue());
     }
 
-    Rule StringNormal()
+    Rule jsonObject()
     {
-        return ZeroOrMore(NoneOf("\"\\\b\f\n\r\t"));
-    }
-
-    Rule JsonStringContent()
-    {
-        return Join(StringNormal(), StringSpecial());
-    }
-
-    Rule JsonString()
-    {
-        return Sequence('"', JsonStringContent(), '"');
-    }
-
-    Rule JsonBoolean()
-    {
-        return FirstOf("true", "false");
-    }
-
-    Rule JsonNull()
-    {
-        return String("null");
-    }
-
-    Rule Digits()
-    {
-        return OneOrMore(CharRange('0', '9'));
-    }
-
-    Rule Int()
-    {
-        return FirstOf(Sequence(TestNot('0'), Digits()), '0');
-    }
-
-    Rule Frac()
-    {
-        return Sequence('.', Digits());
-    }
-
-    Rule Exp()
-    {
-        return Sequence(AnyOf("eE"), Optional(AnyOf("+-")), Digits());
-    }
-
-    Rule JsonNumber()
-    {
-        return Sequence(
-            Optional('-'),
-            Int(),
-            Optional(Frac()),
-            Optional(Exp())
+        return sequence('{', whiteSpace(), optional(join(objectMember(),
+                sequence(whiteSpace(), ',', whiteSpace()))), whiteSpace(), '}'
         );
     }
 
-    Rule JsonPrimitive()
+    Rule jsonValue()
     {
-        return FirstOf(JsonString(), JsonNumber(), JsonBoolean(), JsonNull());
+        return firstOf(jsonObject(), jsonArray(), jsonPrimitive());
     }
 
-    Rule JsonArray()
+    Rule jsonText()
     {
-        return Sequence(
-            '[', WS(),
-            Optional(Join(JsonValue(), Sequence(WS(), ',', WS()))),
-            WS(), ']'
-        );
+        return sequence(jsonValue(), EOI);
     }
 
-    Rule ObjectMember()
+    Rule whiteSpace()
     {
-        return Sequence(JsonString(), WS(), ':', WS(), JsonValue());
-    }
-
-    Rule JsonObject()
-    {
-        return Sequence(
-            '{', WS(),
-            Optional(Join(ObjectMember(), Sequence(WS(), ',', WS()))),
-            WS(), '}'
-        );
-    }
-
-    Rule JsonValue()
-    {
-        return FirstOf(JsonObject(), JsonArray(), JsonPrimitive());
-    }
-
-    Rule JsonText()
-    {
-        return Sequence(JsonValue(), EOI);
-    }
-
-    Rule WS()
-    {
-        return ZeroOrMore(AnyOf(" \n\r\f"));
+        return zeroOrMore(anyOf(" \n\r\f"));
     }
 
     @Cached
     @DontExtend
-    Rule Join(final Rule normal, final Rule special)
+    Rule join(final Rule normal, final Rule special)
     {
-        return Sequence(normal, ZeroOrMore(Sequence(special, normal)));
+        return sequence(normal, zeroOrMore(sequence(special, normal)));
     }
 
     public static void main(final String... args)
@@ -165,7 +156,7 @@ public class JsonParser
             line = scanner.nextLine();
             if (line.isEmpty())
                 break;
-            result = new ReportingParseRunner(parser.JsonText())
+            result = new ReportingParseRunner(parser.jsonText())
                 .run(line);
             if (result.hasErrors()) {
                 System.out.println("Invalid input!");

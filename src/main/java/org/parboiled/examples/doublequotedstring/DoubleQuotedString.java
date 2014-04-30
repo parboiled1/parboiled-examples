@@ -41,27 +41,25 @@ import java.util.Scanner;
 public class DoubleQuotedString
     extends BaseParser<Void>
 {
-    Rule Normal()
+    Rule normal()
     {
-        return NoneOf("\\\"");
+        return noneOf("\\\"");
     }
 
-    Rule Special()
+    Rule special()
     {
-        return String("\\\"");
+        return string("\\\"");
     }
 
-    Rule NSN()
+    Rule nsn()
     {
-        return Sequence(
-            ZeroOrMore(Normal()),
-            ZeroOrMore(Special(), ZeroOrMore(Normal()))
-        );
+        return sequence(zeroOrMore(normal()),
+            zeroOrMore(special(), zeroOrMore(normal())));
     }
 
-    Rule DoubleQuotedString()
+    Rule doubleQuotedString()
     {
-        return Sequence('"', NSN(), '"', EOI);
+        return sequence('"', nsn(), '"', EOI);
     }
 
     public static void main(final String... args)
@@ -78,7 +76,7 @@ public class DoubleQuotedString
             line = scanner.nextLine();
             if (line.isEmpty())
                 break;
-            result = new TracingParseRunner(parser.DoubleQuotedString())
+            result = new TracingParseRunner(parser.doubleQuotedString())
                 .run(line);
             if (result.hasErrors()) {
                 System.out.println("Invalid input!");
