@@ -10,9 +10,11 @@ Build with:
 
 ```
 # Unix
-./gradlew clean test
+./gradlew clean compileJava
 # Windows
-gradlew.bat clean test
+gradlew.bat clean compileJava
 ```
+
+Alternatively, open with your IDE; all major IDEs support Gradle out of the box.
 
 
