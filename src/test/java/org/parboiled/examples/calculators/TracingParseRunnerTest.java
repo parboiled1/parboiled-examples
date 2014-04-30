@@ -16,8 +16,11 @@
 
 package org.parboiled.examples.calculators;
 
+import com.google.common.base.Predicate;
+import org.parboiled.Context;
 import org.parboiled.Parboiled;
 import org.parboiled.common.StringBuilderSink;
+import org.parboiled.common.Tuple2;
 import org.parboiled.support.ParsingResult;
 import org.testng.annotations.Test;
 import org.parboiled.parserunners.TracingParseRunner;
@@ -35,8 +38,11 @@ public class TracingParseRunnerTest {
         CalculatorParser1 parser = Parboiled.createParser(CalculatorParser1.class);
 
         StringBuilderSink log = new StringBuilderSink();
+        final Predicate<Tuple2<Context<?>, Boolean>> predicate = and(
+            rules(parser.Number(), parser.Parens()),
+            not(rulesBelow(parser.Digits())));
         TracingParseRunner<Integer> runner = new TracingParseRunner<Integer>(parser.InputLine())
-                .withFilter(and(rules(parser.Number(), parser.Parens()), not(rulesBelow(parser.Digits()))))
+                .withFilter(predicate)
                 .withLog(log);
         ParsingResult<Integer> result = runner.run("2*(4+5");
 
